@@ -12,7 +12,7 @@
         <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
         <!-- <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script> -->
         <link rel="stylesheet" href="https://unpkg.com/ol-layerswitcher@3.4.0/src/ol-layerswitcher.css" />
-        <title>NYPAD - Test</title>
+        <title>NYPAD - Toolkit</title>
     </head>
 
     <body>
@@ -20,16 +20,47 @@
             <div id='header'>NYPAD - Toolkit</div>
             <!-- Menu bar -->
             <div id='menu'>
-                <form>
-                    Area greater than (acres):</br>
-                    <input id="by_area" type="text" value=""></br>
-                    <input type="button" value="Search" onClick="searchByArea();"></br>
-                    GAP Status:
-                    <input type="button" value="All" onClick="searchByGapStatus();">
-                    <!-- <input type="button" value="1" onClick="searchByGapStatus(1);"> -->
-                    <input type="button" value="2" onClick="searchByGapStatus(2);">
-                    <input type="button" value="3" onClick="searchByGapStatus(3);">
-                    <input type="button" value="4" onClick="searchByGapStatus(4);"></br>
+                <form id="">
+                    <!-- Search by area, greater than or less than -->
+                    <div id="area-search-filter" class="searchbox-container">
+
+                        <div class="searchbox-title">Search by area (acres):</div>
+                        <div class="searchbox-content">
+                            <label for="area-search-greaterthan">Less than</label>
+                                <input type="radio" name="area-search-filter" value="<">
+                            <label for="area-search-lessthan">Greater than</label>
+                                <input type="radio" name="area-search-filter" value=">">
+                            <input id="by_area" type="text" value="">
+                            <input type="button" value="Search" onClick="searchByArea();">
+                        </div>
+                    </div>
+                    <!-- Search by GAP Status -->
+                    <div id="gap-status-filter" class="searchbox-container">
+                       <div class="searchbox-title">GAP Status:</div>
+                       <div class="searchbox-content">
+                            <input type="button" value="All" onClick="searchByGapStatus();">
+                            <!-- <input type="button" value="1" onClick="searchByGapStatus(1);"> -->
+                            <input type="button" value="2" onClick="searchByGapStatus(2);">
+                            <input type="button" value="3" onClick="searchByGapStatus(3);">
+                            <input type="button" value="4" onClick="searchByGapStatus(4);">
+                        </div>
+                    </div>
+                    <!-- Change the layer attribute theme -->
+                    <div id="style-filter" class="searchbox-container">
+                        <div class="searchbox-title">Style Filters</div>
+                        <div class="searchbox-content">
+                            <label for="nypad-gap-status-filter">
+                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-gap-status-filter" name="style-filter" value="nypad_gap_codes">
+                                GAP Status</label>
+                            <label for="nypad-agency-type-filter">
+                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-agency-type-filter" name="style-filter" value="nypad_agency_type">
+                                Agency Type</label>
+                            <div id="style-filter-legend">
+                                <div class="legend-title">Legend</div>
+                                <img id="legend" src="http://molamola.us:8081/geoserver/nypad_postgres/wms?Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&LEGEND_OPTIONS=countMatched:true">
+                            </div>
+                        </div>
+                    </div>
             
                     <!-- <label>Action: &nbsp;</label> -->
                     <select id="type">
@@ -41,21 +72,6 @@
                         <option value="Circle">Draw circle</option>
                     </select>
                     <!-- <input type="button" value="List Features" onclick="listFeatures();" /> -->
-                    <div id="style-filter-control" class="control-container">
-                        <div id="style-filter-control-title" class="control-header">Style Filters</div>
-                        <div id="style-filters" class="control-content">
-                            <label for="nypad-gap-status-filter">
-                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-gap-status-filter" name="style-filter" value="nypad_gap_codes">
-                                GAP Status</label>
-                            <label for="nypad-agency-type-filter">
-                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-agency-type-filter" name="style-filter" value="nypad_agency_type">
-                                Agency Type</label>
-                        </div>
-                        <div id="style-filters-legend">
-                            <div class="legend-title">Legend</div>
-                            <img id="legend" src="http://molamola.us:8081/geoserver/nypad_postgres/wms?Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&LEGEND_OPTIONS=countMatched:true">
-                        </div>
-                    </div>
                 </form>
             </div>
             <!-- End Menu bar -->
@@ -74,7 +90,7 @@
                 </div>
             </div>
             <!-- End Content -->
-            <div id="footer">Footer</div>
+            <div id="footer">The New York Protected Areas Database is published and maintained by the <a href="http://www.dec.ny.gov/animals/29338.html">New York Natural Heritage Program</a>.</div>
         </div> 
 
 

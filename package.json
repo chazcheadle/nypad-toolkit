@@ -15,12 +15,14 @@
     "url": "git+https://github.com/chazcheadle/nypad-toolkit.git"
   },
   "keywords": [
+    "cssgrid",
+    "geography",
+    "geoserver",
     "gis",
     "map",
+    "nodejs",
     "openlayers",
-    "geoserver",
-    "postgis",
-    "geography"
+    "postgis"
   ],
   "author": "Chaz & Emily Cheadle",
   "license": "ISC",

@@ -317,9 +317,17 @@ function populatePopup(data) {
 }
 
 function searchByArea() {
-    var acres = '';
+    let acres = '';
+    let operator = '';
+    const compare = document.getElementsByName('area-search-filter'); 
+
+    for (let i = 0; i < compare.length; i++) { 
+        if (compare[i].checked) 
+            operator = compare[i].value;
+    }
     acres = document.getElementById('by_area').value;
-    cqlFilter = (parseInt(acres, 10)) ? `gis_acres > ${acres}` : null;
+    console.log(`gis_acres ${operator} ${acres}`);
+    cqlFilter = (parseInt(acres, 10)) ? `gis_acres ${operator} ${acres}` : null;
     nypad.getSource().updateParams({
         'LAYERS': 'nypad_postgis:nypad_2017',
         'CQL_FILTER': cqlFilter
@@ -340,7 +348,7 @@ closer.onclick = function() {
 }
 
 function changeLayerStyle(style) {
-    nypad.getSource().  updateParams({
+    nypad.getSource().updateParams({
         'STYLES': style
     })
     document.getElementById('legend').src = `http://molamola.us:8081/geoserver/nypad_postgres/wms?Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&STYLE=${style}&LEGEND_OPTIONS=countMatched:true`
