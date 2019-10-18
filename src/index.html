@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+
+    <head>
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.0.0/css/ol.css" type="text/css">
+        <link rel="stylesheet" href="css/index.css">
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+            integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.0.0/build/ol.js"></script>
+        <script src="https://unpkg.com/ol-layerswitcher@3.4.0"></script>
+        <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
+        <!-- <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script> -->
+        <link rel="stylesheet" href="https://unpkg.com/ol-layerswitcher@3.4.0/src/ol-layerswitcher.css" />
+        <title>NYPAD - Test</title>
+    </head>
+
+    <body>
+        <div id='container'>
+            <div id='header'>NYPAD - Toolkit</div>
+            <!-- Menu bar -->
+            <div id='menu'>
+                <form>
+                    Area greater than (acres):</br>
+                    <input id="by_area" type="text" value=""></br>
+                    <input type="button" value="Search" onClick="searchByArea();"></br>
+                    GAP Status:
+                    <input type="button" value="All" onClick="searchByGapStatus();">
+                    <!-- <input type="button" value="1" onClick="searchByGapStatus(1);"> -->
+                    <input type="button" value="2" onClick="searchByGapStatus(2);">
+                    <input type="button" value="3" onClick="searchByGapStatus(3);">
+                    <input type="button" value="4" onClick="searchByGapStatus(4);"></br>
+            
+                    <!-- <label>Action: &nbsp;</label> -->
+                    <select id="type">
+                        <option value="Navigate">Navigate</option>
+                        <option value="Modify">Modify</option>
+                        <option value="Point">Draw point</option>
+                        <option value="LineString">Draw line</option>
+                        <option value="Polygon">Draw polygon</option>
+                        <option value="Circle">Draw circle</option>
+                    </select>
+                    <!-- <input type="button" value="List Features" onclick="listFeatures();" /> -->
+                    <div id="style-filter-control" class="control-container">
+                        <div id="style-filter-control-title" class="control-header">Style Filters</div>
+                        <div id="style-filters" class="control-content">
+                            <label for="nypad-gap-status-filter">
+                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-gap-status-filter" name="style-filter" value="nypad_gap_codes">
+                                GAP Status</label>
+                            <label for="nypad-agency-type-filter">
+                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-agency-type-filter" name="style-filter" value="nypad_agency_type">
+                                Agency Type</label>
+                        </div>
+                        <div id="style-filters-legend">
+                            <div class="legend-title">Legend</div>
+                            <img id="legend" src="http://molamola.us:8081/geoserver/nypad_postgres/wms?Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&LEGEND_OPTIONS=countMatched:true">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- End Menu bar -->
+            <!-- Content -->
+            <div id='content'>
+                <div id="map" class="map">
+                    <div id="scale-line" class="scale-line"></div>
+                    <div id="map"></div>
+                    <div id="popup">
+                        <div id="popup-header">
+                            <a href="#" id="popup-closer" class="popup-closer"></a>
+                            <div id="popup-title">NYPAD Data</div>
+                        </div>
+                        <div id="popup-content"></div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Content -->
+            <div id="footer">Footer</div>
+        </div> 
+
+
+
+        <!-- <iframe id="info" width="800" height="100"></iframe> -->
+
+        <script src="js/index.js" type="text/javascript"></script>
+
+
+    </body>
+
+</html>

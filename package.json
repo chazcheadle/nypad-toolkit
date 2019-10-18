@@ -1,0 +1,51 @@
+{
+  "name": "nypad-toolkit",
+  "version": "1.0.0",
+  "description": "Online map viewer for the NYPAD dataset",
+  "main": "server.js",
+  "scripts": {
+    "build": "babel src -s -D -d dist",
+    "clean": "rimraf dist",
+    "lint": "eslint .",
+    "start": "npm run clean && npm run build && node dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chazcheadle/nypad-toolkit.git"
+  },
+  "keywords": [
+    "gis",
+    "map",
+    "openlayers",
+    "geoserver",
+    "postgis",
+    "geography"
+  ],
+  "author": "Chaz & Emily Cheadle",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/chazcheadle/nypad-toolkit/issues"
+  },
+  "homepage": "https://github.com/chazcheadle/nypad-toolkit#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.6.4",
+    "@babel/core": "^7.6.4",
+    "@babel/node": "^7.6.3",
+    "@babel/preset-env": "^7.6.3",
+    "babel-cli": "^6.9.0",
+    "babel-core": "^6.9.0",
+    "babel-preset-es2015": "^6.24.1",
+    "eslint": "^6.5.1",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "nodemon": "^1.19.4"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "rimraf": "^3.0.0"
+  }
+}
