@@ -10,8 +10,10 @@
         <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.0.0/build/ol.js"></script>
         <script src="https://unpkg.com/ol-layerswitcher@3.4.0"></script>
         <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
-        <!-- <script type="text/javascript" src="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.js"></script> -->
         <link rel="stylesheet" href="https://unpkg.com/ol-layerswitcher@3.4.0/src/ol-layerswitcher.css" />
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
+        <script src="https://unpkg.com/jsts@2.0.6/dist/jsts.min.js"></script>
         <title>NYPAD - Toolkit</title>
     </head>
 
@@ -21,30 +23,6 @@
             <!-- Menu bar -->
             <div id='menu'>
                 <form id="">
-                    <!-- Search by area, greater than or less than -->
-                    <div id="area-search-filter" class="searchbox-container">
-
-                        <div class="searchbox-title">Search by area (acres):</div>
-                        <div class="searchbox-content">
-                            <label for="area-search-greaterthan">Less than</label>
-                                <input type="radio" name="area-search-filter" value="<">
-                            <label for="area-search-lessthan">Greater than</label>
-                                <input type="radio" name="area-search-filter" value=">">
-                            <input id="by_area" type="text" value="">
-                            <input type="button" value="Search" onClick="searchByArea();">
-                        </div>
-                    </div>
-                    <!-- Search by GAP Status -->
-                    <div id="gap-status-filter" class="searchbox-container">
-                       <div class="searchbox-title">GAP Status:</div>
-                       <div class="searchbox-content">
-                            <input type="button" value="All" onClick="searchByGapStatus();">
-                            <!-- <input type="button" value="1" onClick="searchByGapStatus(1);"> -->
-                            <input type="button" value="2" onClick="searchByGapStatus(2);">
-                            <input type="button" value="3" onClick="searchByGapStatus(3);">
-                            <input type="button" value="4" onClick="searchByGapStatus(4);">
-                        </div>
-                    </div>
                     <!-- Change the layer attribute theme -->
                     <div id="style-filter" class="searchbox-container">
                         <div class="searchbox-title">Style Filters</div>
@@ -61,8 +39,44 @@
                             </div>
                         </div>
                     </div>
-            
-                    <!-- <label>Action: &nbsp;</label> -->
+
+                    <!-- Search Local name -->
+                    <div id="local-name-search-filter" class="searchbox-container">
+                        <div class="searchbox-title">Search by Local Name:</div>
+                        <div class="searchbox-content">
+                            <select id="local-name" style="width:300px"></select>
+                            <input type="button" onclick="getLocalNameSearchResults(document.getElementById('local-name').value);" value="Search">
+                            <input type="button" onclick="getLocalNameSearchResults();" value="Reset">
+                        </div>
+                    </div>
+
+                    <!-- Search by area, greater than or less than -->
+                    <div id="area-search-filter" class="searchbox-container">
+                        <div class="searchbox-title">Search by area (acres):</div>
+                        <div class="searchbox-content">
+                            <label for="area-search-greaterthan">Less than</label>
+                                <input type="radio" name="area-search-filter" value="<">
+                            <label for="area-search-lessthan">Greater than</label>
+                                <input type="radio" name="area-search-filter" value=">">
+                            <input id="by_area" type="text" value="">
+                            <input type="button" value="Search" onclick="searchByArea(true);">
+                            <input type="button" value="Reset" onclick="searchByArea(false);">
+                        </div>
+                    </div>
+
+                    <!-- Search by GAP Status -->
+                    <div id="gap-status-filter" class="searchbox-container">
+                       <div class="searchbox-title">GAP Status:</div>
+                       <div class="searchbox-content">
+                            <input type="button" value="All" onClick="searchByGapStatus();">
+                            <input type="button" value="1" onClick="searchByGapStatus(1);">
+                            <input type="button" value="2" onClick="searchByGapStatus(2);">
+                            <input type="button" value="3" onClick="searchByGapStatus(3);">
+                            <input type="button" value="4" onClick="searchByGapStatus(4);">
+                        </div>
+                    </div>
+
+                    <!-- <label>Action:</label> -->
                     <select id="type">
                         <option value="Navigate">Navigate</option>
                         <option value="Modify">Modify</option>
@@ -92,14 +106,7 @@
             <!-- End Content -->
             <div id="footer">The New York Protected Areas Database is published and maintained by the <a href="http://www.dec.ny.gov/animals/29338.html">New York Natural Heritage Program</a>.</div>
         </div> 
-
-
-
-        <!-- <iframe id="info" width="800" height="100"></iframe> -->
-
         <script src="js/index.js" type="text/javascript"></script>
-
-
     </body>
 
 </html>

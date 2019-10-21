@@ -197,3 +197,7 @@ input[name='style-filter'] {
     padding: 5px 10px;
     border: 1px solid lightslategray;
 }
+
+.select2-container {
+    width: 228px;
+}

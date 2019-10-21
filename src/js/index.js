@@ -1,7 +1,8 @@
-var bingMapsApiKey = 'AnFPaMaxN1xpYPU07vmKY0Ejl89tpzRIVdXsfQc2i_0mgFCiscaVpVtZzeR1Uqvn';
-var url = 'http://molamola.us:8081/geoserver/nypad_postgres/wms?';
-var controls;
-var styles = [
+
+const bingMapsApiKey = 'AnFPaMaxN1xpYPU07vmKY0Ejl89tpzRIVdXsfQc2i_0mgFCiscaVpVtZzeR1Uqvn';
+const url = 'http://molamola.us:8081/geoserver/nypad_postgres/wms?';
+
+var bingStyles = [
     'RoadOnDemand',
     'Aerial',
     'AerialWithLabelsOnDemand',
@@ -29,41 +30,12 @@ var map = new ol.Map({
                     visible: false,
                     preload: Infinity,
                     source: new ol.source.BingMaps({
-                    key: bingMapsApiKey,
-                    imagerySet: styles[2]
-                    // use maxZoom 19 to see stretched tiles instead of the BingMaps
-                    // "no photos at this zoom level" tiles
-                    // maxZoom: 19
+                        key: bingMapsApiKey,
+                        imagerySet: bingStyles[2]
                     })
                 }),
-                // new ol.layer.Group({
-                //     // A layer must have a title to appear in the layerswitcher
-                //     title: 'Water color with labels',
-                //     // Setting the layers type to 'base' results
-                //     // in it having a radio button and only one
-                //     // base layer being visibile at a time
-                //     type: 'base',
-                //     // Setting combine to true causes sub-layers to be hidden
-                //     // in the layerswitcher, only the parent is shown
-                //     combine: true,
-                //     visible: false,
-                //     layers: [
-                //         new ol.layer.Tile({
-                //             source: new ol.source.Stamen({
-                //                 layer: 'watercolor'
-                //             })
-                //         }),
-                //         new ol.layer.Tile({
-                //             source: new ol.source.Stamen({
-                //                 layer: 'terrain-labels'
-                //             })
-                //         })
-                //     ]
-                // }),
                 new ol.layer.Tile({
-                    // A layer must have a title to appear in the layerswitcher
                     title: 'Open Street Map',
-                    // Again set this layer as a base layer
                     type: 'base',
                     visible: true,
                     source: new ol.source.OSM()
@@ -74,7 +46,7 @@ var map = new ol.Map({
     view: new ol.View({
         center: [-8420005, 5286797],
         zoom: 7
-    })
+        })
 });
 
 // Create a blank vector layer to draw on.
@@ -111,8 +83,6 @@ map.addControl(layerSwitcher2);
 
 var draw, snap; // global so we can remove them later
 var typeSelect = document.getElementById('type');
-
-
 
 
 // var selectFeat = new ol.interaction.Select();
@@ -188,60 +158,22 @@ var vectorLayer = new ol.layer.Vector({
 map.addLayer(vectorLayer);
 
 
-    // draw.on('drawend', function(event) {
-    //     console.log(event.feature);
-    //     var writer = new ol.format.GeoJSON();
-    //     var geojsonStr = writer.writeFeatures(source.getFeatures());
-    //     console.log(JSON.parse(geojsonStr));
-    //     transactWFS('insert', event.feature);
-    // });
-
-// var formatWFS = new ol.format.WFS();
-
-// var formatGML = new ol.format.GML({
-//     featureNS: 'http://molamola.us:8081/geoserver/nypad_postgres/wfs',
-//     featureType: 'the_geom',
-//     srsName: 'EPSG:3857'    
-// });
-// var xs = new XMLSerializer();
-// function transactWFS(mode, f) {
-//     console.log('transactWFS()');
-//     var node;
-//         switch (mode) {
-//             case 'insert':
-//                 node = formatWFS.writeTransaction([f], null, null, formatGML);
-//                 break;
-//             case 'update':
-//                 node = formatWFS.writeTransaction(null, [f], null, formatGML);
-//                 break;
-//             case 'delete':
-//                 node = formatWFS.writeTransaction(null, null, [f], formatGML);
-//                 break;
-//         }
-//         var payload = xs.serializeToString(node);
-//         console.log(payload);
-//         $.ajax('http://molamola.us:8081/geoserver/nypad_postgres/wfs', {
-//             type: 'POST',
-//             dataType: 'xml',
-//             processData: false,
-//             contentType: 'text/xml',
-//             data: payload
-//         }).done(function() {
-//             // source.clear();
-//         });
-// }
-
+/**
+ * Handle click events on the map
+ * 
+ * Zoom to clicked area if it is a feature.
+ * Request feature as WFS to highlight.
+ */
 map.on('singleclick', function (evt) {
 
     var view = map.getView();
-    // view.animate({
-    //     center: evt.coordinate,
-    //     duration: 400
-    // });
+
     if (typeSelect.value === 'Navigate') {
         view.animate({
             center: evt.coordinate,
-            duration: 500
+            duration: 1000,
+            // Zoom in to a resonable level, but do not zoom out if the user has already zoomed in manually.
+            zoom: map.getView().getZoom() > 10 ? map.getView().getZoom() : 10
         })
     }
     var url = nypad.getSource().getGetFeatureInfoUrl(
@@ -249,10 +181,6 @@ map.on('singleclick', function (evt) {
         { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
 
     if (url) {
-        console.log(url);
-        // document.getElementById('info').src = url;
-        var format = new ol.format.GeoJSON();
-        var record;
         fetch(url)
             .then((response) => {
                 return response.text();
@@ -261,8 +189,6 @@ map.on('singleclick', function (evt) {
                 var feature = JSON.parse(text)
                 if (feature && feature.features.length) {
 
-                    // const extent = feature.features[0].getGeometry().getExtent()
-                    // map.getView().fit(extent);
                     populatePopup(feature);
                     
                     // Retrieve feature vector and add to layer above raster
@@ -296,6 +222,7 @@ map.on('singleclick', function (evt) {
     }
 });
 
+// List features on user drawing layer
 function listFeatures() {
     console.log(source.getFeatures());
     var writer = new ol.format.GeoJSON();
@@ -303,6 +230,7 @@ function listFeatures() {
     console.log(geojsonStr);
 }
 
+// Populate info window
 function populatePopup(data) {
     console.log(data);
     document.getElementById('popup').style.display = 'unset';
@@ -311,12 +239,13 @@ function populatePopup(data) {
     <p><strong>Owner:</strong> ${properties.loc_own}</p>
     <p><strong>Agency:</strong> ${properties.loc_mang}</p>
     <p><strong>GAP Status:</strong> ${properties.gap_sts}</p>
+    <p><strong>NYPAD ID:</strong> ${properties.nypad_id}</p>    
     <p><strong>Area:</strong> ${properties.gis_acres}</p>`
     document.getElementById('popup-content').innerHTML = html;
-
 }
 
-function searchByArea() {
+// Area search function
+function searchByArea(reset) {
     let acres = '';
     let operator = '';
     const compare = document.getElementsByName('area-search-filter'); 
@@ -326,14 +255,20 @@ function searchByArea() {
             operator = compare[i].value;
     }
     acres = document.getElementById('by_area').value;
-    console.log(`gis_acres ${operator} ${acres}`);
-    cqlFilter = (parseInt(acres, 10)) ? `gis_acres ${operator} ${acres}` : null;
+
+    if (reset) {
+        cqlFilter = (parseInt(acres, 10)) ? `gis_acres ${operator} ${acres}` : null;
+    }
+    else {
+        cqlFilter = null;
+    }
     nypad.getSource().updateParams({
         'LAYERS': 'nypad_postgis:nypad_2017',
         'CQL_FILTER': cqlFilter
     });
 }
 
+// GAP status filter function
 function searchByGapStatus(status) {
     cqlFilter = status ? `gap_sts = '${status}'` : null;
     nypad.getSource().updateParams({
@@ -342,21 +277,123 @@ function searchByGapStatus(status) {
     });
 }
 
+// Local name search function
+function getLocalNameSearchResults(name) {
+    cqlFilter = name ? `loc_nm = '${name}'` : null;
+    nypad.getSource().updateParams({
+        'LAYERS': 'nypad_postgis:nypad_2017',
+        'CQL_FILTER': cqlFilter
+    });
+}
+
+// Style filter change event funtion
+function changeLayerStyle(style) {
+    nypad.getSource().updateParams({
+        'STYLES': style
+    })
+    document.getElementById('legend').src = `${$url}Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&STYLE=${style}&LEGEND_OPTIONS=countMatched:true`
+
+}
+
+// Close info window
 var closer = document.getElementById('popup-closer');
 closer.onclick = function() {
     document.getElementById('popup').style.display = 'none';
 }
 
-function changeLayerStyle(style) {
-    nypad.getSource().updateParams({
-        'STYLES': style
-    })
-    document.getElementById('legend').src = `http://molamola.us:8081/geoserver/nypad_postgres/wms?Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&STYLE=${style}&LEGEND_OPTIONS=countMatched:true`
+// Initialize search select field for autocomplete.
+$(document).ready(function() {
+    $('#local-name').select2({
+        ajax: {
+            url: '/autocomplete',
+            dataType: 'json',
+            data: function (params) {
+                var query = {
+                    q: params.term,
+                }
+                return query;
+            }
+        }
+    });
+});
 
-}
-// var legend = new ol.control.Legend({
-//     title: 'LEGENDARY THING',
-//     target: 'map',
-//     style: 'nypad_gap_codes'
+
+
+//// WIP: Feature drawing and saving code.
+// draw.on('drawend', function(event) {
+//     console.log(event.feature);
+//     var writer = new ol.format.GeoJSON();
+//     var geojsonStr = writer.writeFeatures(source.getFeatures());
+//     console.log(JSON.parse(geojsonStr));
+//     transactWFS('insert', event.feature);
 // });
-// map.addControl(legend);
+
+// var formatWFS = new ol.format.WFS();
+
+// var formatGML = new ol.format.GML({
+//     featureNS: '',
+//     featureType: 'the_geom',
+//     srsName: 'EPSG:3857'    
+// });
+// var xs = new XMLSerializer();
+// function transactWFS(mode, f) {
+//     console.log('transactWFS()');
+//     var node;
+//         switch (mode) {
+//             case 'insert':
+//                 node = formatWFS.writeTransaction([f], null, null, formatGML);
+//                 break;
+//             case 'update':
+//                 node = formatWFS.writeTransaction(null, [f], null, formatGML);
+//                 break;
+//             case 'delete':
+//                 node = formatWFS.writeTransaction(null, null, [f], formatGML);
+//                 break;
+//         }
+//         var payload = xs.serializeToString(node);
+//         console.log(payload);
+//         $.ajax('', {
+//             type: 'POST',
+//             dataType: 'xml',
+//             processData: false,
+//             contentType: 'text/xml',
+//             data: payload
+//         }).done(function() {
+//             // source.clear();
+//         });
+// }
+
+//// WIP: Vector feature buffer tool
+// var vectorSource = new ol.source.Vector({
+// fetch('' +
+//     'version=1.1.0' +
+//     '&request=GetFeature' +
+//     '&typename=nypad_postgres:nypad_2017&' +
+//     'CQL_FILTER=' + cqlfilter + '&' +
+//     'outputFormat=application/json&' +
+//     'maxFeatures=50&' +
+//     'srsname=EPSG:3857&,EPSG:3857')
+//     .then((response) => {
+//         return response.json()
+//     })
+//     .then((json) => {
+//         var format = new ol.format.GeoJSON();
+//         var features = format.readFeatures(json, {featureProjection: 'EPSG:3857'});
+//         console.log(json);
+//         var parser = new jsts.io.OL3Parser();
+//         parser.inject(new ol.geom.Polygon());
+//         for (var i = 0; i < features.length; i++) {
+//             var feature = features[i];
+//             // convert the OpenLayers geometry to a JSTS geometry
+//             console.log(feature.getGeometry());
+//             var jstsGeom = parser.read(feature.getGeometry());
+//         console.log(jstsGeom);
+//             // // create a buffer of 40 meters around each line
+//             // var buffered = jstsGeom.buffer(40);
+        
+//             // // convert back from JSTS and replace the geometry on the feature
+//             // feature.setGeometry(parser.write(buffered));
+//         }
+//         vectorSource.addFeatures(features);
+
+//     })
