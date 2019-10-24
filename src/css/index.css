@@ -201,3 +201,7 @@ input[name='style-filter'] {
 .select2-container {
     width: 228px;
 }
+
+textarea#cql-filter-query {
+    max-width: 300px;
+}

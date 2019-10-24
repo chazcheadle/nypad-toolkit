@@ -46,13 +46,13 @@ var map = new ol.Map({
     view: new ol.View({
         center: [-8420005, 5286797],
         zoom: 7
-        })
+    })
 });
 
 // Create a blank vector layer to draw on.
-var source = new ol.source.Vector();
-var vector = new ol.layer.Vector({
-    source: source,
+var userSource = new ol.source.Vector();
+var userLayer = new ol.layer.Vector({
+    source: userSource,
     style: new ol.style.Style({
         fill: new ol.style.Fill({
             color: 'rgba(255, 255, 255, 0.2)'
@@ -69,11 +69,11 @@ var vector = new ol.layer.Vector({
         })
     })
 });
-map.addLayer(vector);
-// var modify = new ol.interaction.Modify({ source: source });
+map.addLayer(userLayer);
+// var modify = new ol.interaction.Modify({ source: userSource });
 // map.addInteraction(modify);
 
-source.on('addfeature', function(feature) {
+userSource.on('addfeature', function(feature) {
     console.log(feature);
 })
 
@@ -125,7 +125,7 @@ typeSelect.onchange = function () {
 
 addInteractions();
 
-var counties = new ol.layer.Image({
+var countiesLayer = new ol.layer.Image({
     source: new ol.source.ImageWMS({
         url: url,
         params: {
@@ -134,11 +134,11 @@ var counties = new ol.layer.Image({
         serverType: 'geoserver'
     })
 })
-counties.setOpacity(0.8);
-map.addLayer(counties);
+countiesLayer.setOpacity(0.8);
+map.addLayer(countiesLayer);
 
 var cqlFilter = '';
-var nypad = new ol.layer.Image({
+var nypadLayer = new ol.layer.Image({
     source: new ol.source.ImageWMS({
         url: url,
         params: {
@@ -149,8 +149,8 @@ var nypad = new ol.layer.Image({
         serverType: 'geoserver'
     })
 })
-nypad.setOpacity(0.8);
-map.addLayer(nypad);
+nypadLayer.setOpacity(0.8);
+map.addLayer(nypadLayer);
 
 var vectorLayer = new ol.layer.Vector({
     source: null
@@ -176,7 +176,7 @@ map.on('singleclick', function (evt) {
             zoom: map.getView().getZoom() > 10 ? map.getView().getZoom() : 10
         })
     }
-    var url = nypad.getSource().getGetFeatureInfoUrl(
+    var url = nypadLayer.getSource().getGetFeatureInfoUrl(
         evt.coordinate, view.getResolution(), view.getProjection(),
         { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
 
@@ -262,7 +262,7 @@ function searchByArea(reset) {
     else {
         cqlFilter = null;
     }
-    nypad.getSource().updateParams({
+    nypadLayer.getSource().updateParams({
         'LAYERS': 'nypad_postgis:nypad_2017',
         'CQL_FILTER': cqlFilter
     });
@@ -271,7 +271,7 @@ function searchByArea(reset) {
 // GAP status filter function
 function searchByGapStatus(status) {
     cqlFilter = status ? `gap_sts = '${status}'` : null;
-    nypad.getSource().updateParams({
+    nypadLayer.getSource().updateParams({
         'LAYERS': 'nypad_postgis:nypad_2017',
         'CQL_FILTER': cqlFilter
     });
@@ -280,7 +280,7 @@ function searchByGapStatus(status) {
 // Local name search function
 function getLocalNameSearchResults(name) {
     cqlFilter = name ? `loc_nm = '${name}'` : null;
-    nypad.getSource().updateParams({
+    nypadLayer.getSource().updateParams({
         'LAYERS': 'nypad_postgis:nypad_2017',
         'CQL_FILTER': cqlFilter
     });
@@ -288,12 +288,24 @@ function getLocalNameSearchResults(name) {
 
 // Style filter change event funtion
 function changeLayerStyle(style) {
-    nypad.getSource().updateParams({
+    nypadLayer.getSource().updateParams({
         'STYLES': style
     })
     document.getElementById('legend').src = `${$url}Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&STYLE=${style}&LEGEND_OPTIONS=countMatched:true`
 
 }
+
+// CQL Filter
+function searchByCQLFilter() {
+    console.log(document.getElementById('cql-filter-query').value);
+    const query = document.getElementById('cql-filter-query').value;
+    cqlFilter = query ? query : null;
+    nypadLayer.getSource().updateParams({
+        'LAYERS': 'nypad_postgis:nypad_2017',
+        'CQL_FILTER': cqlFilter
+    });
+}
+// DWITHIN(wkb_geometry, collectGeometries(queryCollection('nypad_postgres:nypad_2017','wkb_geometry','nypad_id = ''NYPAD-40507'')), 5000, meters)
 
 // Close info window
 var closer = document.getElementById('popup-closer');
