@@ -23,8 +23,19 @@
             <!-- Menu bar -->
             <div id='menu'>
                 <form id="">
+                    <!-- Select action -->
+                    <div id="selection-layer-filter-container" class="searchbox-container">
+                        <div class="searchbox-title">Selection layer</div>
+                        <div class="searchbox-content">
+                            <label for="selection-layer-protected-area">Protected Area</label>
+                                <input type="radio" checked=true id="selection-layer-protected-area" name="selection-layer-filter" value="protectedArea">
+                            <label for="selection-layer-county">County boundary</label>
+                                <input type="radio" id="selection-layer-county" name="selection-layer-filter" value="county">
+                        </div>
+                    </div>
+
                     <!-- Change the layer attribute theme -->
-                    <div id="style-filter" class="searchbox-container">
+                    <div id="style-filter-container" class="searchbox-container">
                         <div class="searchbox-title">Style Filters</div>
                         <div class="searchbox-content">
                             <label for="nypad-gap-status-filter">
@@ -41,7 +52,7 @@
                     </div>
 
                     <!-- Search Local name -->
-                    <div id="local-name-search-filter" class="searchbox-container">
+                    <div id="local-name-search-filter-container" class="searchbox-container">
                         <div class="searchbox-title">Search by Local Name:</div>
                         <div class="searchbox-content">
                             <select id="local-name" style="width:300px"></select>
@@ -51,7 +62,7 @@
                     </div>
 
                     <!-- Search by area, greater than or less than -->
-                    <div id="area-search-filter" class="searchbox-container">
+                    <div id="area-search-filter-container" class="searchbox-container">
                         <div class="searchbox-title">Search by area (acres):</div>
                         <div class="searchbox-content">
                             <label for="area-search-greaterthan">Less than</label>

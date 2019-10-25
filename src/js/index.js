@@ -168,20 +168,36 @@ map.on('singleclick', function (evt) {
 
     var view = map.getView();
 
-    if (typeSelect.value === 'Navigate') {
-        view.animate({
-            center: evt.coordinate,
-            duration: 1000,
-            // Zoom in to a resonable level, but do not zoom out if the user has already zoomed in manually.
-            zoom: map.getView().getZoom() > 10 ? map.getView().getZoom() : 10
-        })
-    }
-    var url = nypadLayer.getSource().getGetFeatureInfoUrl(
-        evt.coordinate, view.getResolution(), view.getProjection(),
-        { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
 
-    if (url) {
-        fetch(url)
+
+    // Pick the feature layer to select
+    let layerUrl = '';
+    let selectLayer = '';
+    let cqlFilter = '';
+    let layerName = '';
+    const selectionLayerChoice = document.getElementsByName('selection-layer-filter');
+    for (let i = 0; i < selectionLayerChoice.length; i++) { 
+        if (selectionLayerChoice[i].checked) {
+            selectLayer = selectionLayerChoice[i].value;
+        }
+    }
+    console.log(selectLayer);
+    switch (selectLayer) {
+        case 'county':
+            layerUrl = countiesLayer.getSource().getGetFeatureInfoUrl(
+                evt.coordinate, view.getResolution(), view.getProjection(),
+                { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
+            break;
+        case 'protectedArea':
+        default:
+            layerUrl = nypadLayer.getSource().getGetFeatureInfoUrl(
+                evt.coordinate, view.getResolution(), view.getProjection(),
+                { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
+            break;
+    }
+
+    if (layerUrl) {
+        fetch(layerUrl)
             .then((response) => {
                 return response.text();
             })
@@ -190,20 +206,28 @@ map.on('singleclick', function (evt) {
                 if (feature && feature.features.length) {
 
                     populatePopup(feature);
-                    
+                
+                    if (selectLayer === 'protectedArea') {
+                        cqlFilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
+                        layerName = 'nypad_postgres:nypad_2017';
+                    }
+                    else {
+                        cqlFilter = 'name = \'' + feature.features[0].properties.name + '\'';
+                        layerName = 'nypad_postgres:counties_shoreline';
+                    }
+
                     // Retrieve feature vector and add to layer above raster
-                    var cqlfilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
                     var vectorSource = new ol.source.Vector({
                         format: new ol.format.GeoJSON(),
                         url: function (extent) {
                             return 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
                                 'version=1.1.0' +
                                 '&request=GetFeature' +
-                                '&typename=nypad_postgres:nypad_2017&' +
-                                'CQL_FILTER=' + cqlfilter + '&' +
-                                'outputFormat=application/json&' +
-                                'maxFeatures=50&' +
-                                'srsname=EPSG:3857&,EPSG:3857';
+                                '&typename=' + layerName +
+                                '&CQL_FILTER=' + cqlFilter +
+                                '&outputFormat=application/json' +
+                                '&maxFeatures=50' +
+                                '&srsname=EPSG:3857&,EPSG:3857';
                         },
                         strategy: ol.loadingstrategy.bbox,
                         style: new ol.style.Style({
@@ -216,9 +240,19 @@ map.on('singleclick', function (evt) {
                             })
                         })
                     });
+
                     vectorLayer.setSource(vectorSource);
                 }
             });
+    }
+
+    if (typeSelect.value === 'Navigate') {
+        view.animate({
+            center: evt.coordinate,
+            duration: 1000,
+            // Zoom in to a resonable level, but do not zoom out if the user has already zoomed in manually.
+            zoom: map.getView().getZoom() > 7 ? map.getView().getZoom() : 10
+        })
     }
 });
 
@@ -305,8 +339,7 @@ function searchByCQLFilter() {
         'CQL_FILTER': cqlFilter
     });
 }
-// DWITHIN(wkb_geometry, collectGeometries(queryCollection('nypad_postgres:nypad_2017','wkb_geometry','nypad_id = ''NYPAD-40507'')), 5000, meters)
-
+// DWITHIN(wkb_geometry, collectGeometries(queryCollection('nypad_postgres:nypad_2017','wkb_geometry','nypad_id = ''NYPAD-40507''')), 5000, meters)
 // Close info window
 var closer = document.getElementById('popup-closer');
 closer.onclick = function() {
