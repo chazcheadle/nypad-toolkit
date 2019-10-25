@@ -205,11 +205,11 @@ map.on('singleclick', function (evt) {
                 var feature = JSON.parse(text)
                 if (feature && feature.features.length) {
 
-                    populatePopup(feature);
-                
+                    // Set WMS request parameters for the chosen layer type.
                     if (selectLayer === 'protectedArea') {
                         cqlFilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
                         layerName = 'nypad_postgres:nypad_2017';
+                        populatePopup(feature);
                     }
                     else {
                         cqlFilter = 'name = \'' + feature.features[0].properties.name + '\'';
@@ -294,6 +294,7 @@ function searchByArea(reset) {
         cqlFilter = (parseInt(acres, 10)) ? `gis_acres ${operator} ${acres}` : null;
     }
     else {
+        document.getElementById('by_area').value = '';
         cqlFilter = null;
     }
     nypadLayer.getSource().updateParams({
@@ -325,7 +326,7 @@ function changeLayerStyle(style) {
     nypadLayer.getSource().updateParams({
         'STYLES': style
     })
-    document.getElementById('legend').src = `${$url}Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&STYLE=${style}&LEGEND_OPTIONS=countMatched:true`
+    document.getElementById('legend').src = `${url}Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&STYLE=${style}&LEGEND_OPTIONS=countMatched:true`
 
 }
 

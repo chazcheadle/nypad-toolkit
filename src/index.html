@@ -7,6 +7,8 @@
         <link rel="stylesheet" href="css/index.css">
         <script src="https://code.jquery.com/jquery-3.4.1.min.js"
             integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script src="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v5.0.0/build/ol.js"></script>
         <script src="https://unpkg.com/ol-layerswitcher@3.4.0"></script>
         <link rel="stylesheet" href="https://cdn.rawgit.com/Viglino/ol-ext/master/dist/ol-ext.min.css" />
@@ -14,6 +16,13 @@
         <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/css/select2.min.css" rel="stylesheet" />
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.0/js/select2.min.js"></script>
         <script src="https://unpkg.com/jsts@2.0.6/dist/jsts.min.js"></script>
+        <script>
+            $(function() {
+                $( "#accordion" ).accordion({
+                    heightStyle: "content"
+                });
+            });
+        </script>
         <title>NYPAD - Toolkit</title>
     </head>
 
@@ -24,89 +33,96 @@
             <div id='menu'>
                 <form id="">
                     <!-- Select action -->
-                    <div id="selection-layer-filter-container" class="searchbox-container">
-                        <div class="searchbox-title">Selection layer</div>
+                    <div id="accordion" class="searchbox-container">
+                        <h3 class="searchbox-title">Introduction</h3>
                         <div class="searchbox-content">
-                            <label for="selection-layer-protected-area">Protected Area</label>
-                                <input type="radio" checked=true id="selection-layer-protected-area" name="selection-layer-filter" value="protectedArea">
-                            <label for="selection-layer-county">County boundary</label>
-                                <input type="radio" id="selection-layer-county" name="selection-layer-filter" value="county">
+                            Click on the headings below to activate the search tools.
                         </div>
-                    </div>
-
-                    <!-- Change the layer attribute theme -->
-                    <div id="style-filter-container" class="searchbox-container">
-                        <div class="searchbox-title">Style Filters</div>
+                        <h3 class="searchbox-title">Selection Layer</h3>
                         <div class="searchbox-content">
-                            <label for="nypad-gap-status-filter">
-                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-gap-status-filter" name="style-filter" value="nypad_gap_codes">
-                                GAP Status</label>
-                            <label for="nypad-agency-type-filter">
-                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-agency-type-filter" name="style-filter" value="nypad_agency_type">
-                                Agency Type</label>
+                            <div class="radio-buttons">
+                                <input type="radio" id="selection-layer-protected-area" name="selection-layer-filter" checked=true value="protectedArea" />
+                                <label for="selection-layer-protected-area">Protected Area</label>
+                                <input type="radio" id="selection-layer-county" name="selection-layer-filter" value="county" />
+                                <label for="selection-layer-county">County boundary</label>
+                            </div>
+                            <div class="search-box-helptext">Choose which feature type is selected on mouse click.</div>
+                        </div>
+                        <!-- Change the layer attribute theme -->
+                        <h3 class="searchbox-title">Attribute Style</h3>
+                        <div class="searchbox-content">
+                            <div class="radio-buttons">
+                                <input type="radio" id="nypad-gap-status-filter" name="style-filter" checked=true onclick="changeLayerStyle(this.value);" value="nypad_gap_codes" />
+                                <label for="nypad-gap-status-filter">GAP Status</label>
+                                <input type="radio" onclick="changeLayerStyle(this.value);" id="nypad-agency-type-filter" name="style-filter" value="nypad_agency_type" />
+                                <label for="nypad-agency-type-filter">Agency Type</label>
+                            </div>
+                            <div class="search-box-helptext">Choose the attribute type to theme.</div>
                             <div id="style-filter-legend">
                                 <div class="legend-title">Legend</div>
                                 <img id="legend" src="http://molamola.us:8081/geoserver/nypad_postgres/wms?Service=WMS&REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=50&HEIGHT=40&LAYER=nypad_postres:nypad_2017&LEGEND_OPTIONS=countMatched:true">
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Search Local name -->
-                    <div id="local-name-search-filter-container" class="searchbox-container">
-                        <div class="searchbox-title">Search by Local Name:</div>
+                        <!-- Search Local name -->
+                        <h3 class="searchbox-title">Search by Local Name</h3>
                         <div class="searchbox-content">
                             <select id="local-name" style="width:300px"></select>
                             <input type="button" onclick="getLocalNameSearchResults(document.getElementById('local-name').value);" value="Search">
                             <input type="button" onclick="getLocalNameSearchResults();" value="Reset">
                         </div>
-                    </div>
 
-                    <!-- Search by area, greater than or less than -->
-                    <div id="area-search-filter-container" class="searchbox-container">
-                        <div class="searchbox-title">Search by area (acres):</div>
+                        <!-- Search by area, greater than or less than -->
+                        <h3 class="searchbox-title">Search by area (acres)</h3>
                         <div class="searchbox-content">
-                            <label for="area-search-greaterthan">Less than</label>
-                                <input type="radio" name="area-search-filter" value="<">
-                            <label for="area-search-lessthan">Greater than</label>
-                                <input type="radio" name="area-search-filter" value=">">
+                            <div class="radio-buttons">
+                                <input type="radio" id="area-search-filter-lt" checked=true name="area-search-filter" value="<" />
+                                <label for="area-search-filter-lt">Less than <strong><</strong></label>
+                                <input type="radio" id="area-search-filter-gt" name="area-search-filter" value=">" />
+                                <label for="area-search-filter-gt">Greater than <strong>></strong></label>
+                            </div>
                             <input id="by_area" type="text" value="">
                             <input type="button" value="Search" onclick="searchByArea(true);">
                             <input type="button" value="Reset" onclick="searchByArea(false);">
                         </div>
-                    </div>
 
-                    <!-- Search by GAP Status -->
-                    <div id="gap-status-filter" class="searchbox-container">
-                       <div class="searchbox-title">GAP Status:</div>
-                       <div class="searchbox-content">
+                        <!-- Search by GAP Status -->
+                        <h3 class="searchbox-title">GAP Status</h3>
+                        <div class="searchbox-content">
                             <input type="button" value="All" onClick="searchByGapStatus();">
                             <input type="button" value="1" onClick="searchByGapStatus(1);">
                             <input type="button" value="2" onClick="searchByGapStatus(2);">
                             <input type="button" value="3" onClick="searchByGapStatus(3);">
                             <input type="button" value="4" onClick="searchByGapStatus(4);">
+                            <div class="search-box-helptext">Choose which GAP status to filter, or ALL.</div>
                         </div>
-                    </div>
 
-                    <!-- CQL Filter -->
-                    <div id="cql-filter" class="searchbox-container">
-                        <div class="searchbox-title">CQL Filter:</div>
+                        <!-- CQL Filter -->
+                        <h3 class="searchbox-title">CQL Filter (Advanced)</h3>
                         <div class="searchbox-content">
+                            <div class="search-box-helptext">Enter a CQL filter.<br />
+                                Available layers:<br />
+                                - Counties: <em>nypad_postgres:counties_shoreline</em><br />
+                                - NYPAD features: <em>nypad_postgres:nypad_2017</em><br />
+                                Geometry name: <em>wkb_geometry</em><br />
+                                <a href="https://docs.geoserver.org/stable/en/user/tutorials/cql/cql_tutorial.html" target="_blank">CQL Reference</a>
+                            </div>
                             <textarea id="cql-filter-query" rows="6" style="width:300px"></textarea>
                             <input type="button" onclick="searchByCQLFilter();" value="Search">
                             <input type="button" onclick="searchByCQLFilter();" value="Reset">
-                         </div>
-                     </div>
+                            </div>
 
-                    <!-- <label>Action:</label> -->
-                    <select id="type">
-                        <option value="Navigate">Navigate</option>
-                        <option value="Modify">Modify</option>
-                        <option value="Point">Draw point</option>
-                        <option value="LineString">Draw line</option>
-                        <option value="Polygon">Draw polygon</option>
-                        <option value="Circle">Draw circle</option>
-                    </select>
-                    <!-- <input type="button" value="List Features" onclick="listFeatures();" /> -->
+                        <!-- <label>Action:</label> -->
+                        <select id="type">
+                            <option value="Navigate">Navigate</option>
+                            <option value="Modify">Modify</option>
+                            <option value="Point">Draw point</option>
+                            <option value="LineString">Draw line</option>
+                            <option value="Polygon">Draw polygon</option>
+                            <option value="Circle">Draw circle</option>
+                        </select>
+                        <!-- <input type="button" value="List Features" onclick="listFeatures();" /> -->
+                    </div>
                 </form>
             </div>
             <!-- End Menu bar -->

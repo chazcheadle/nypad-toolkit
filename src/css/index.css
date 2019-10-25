@@ -9,6 +9,7 @@ html, body {
     width: 100%;
     font-size: initial;
     position: relative;
+    padding-bottom:20px;
 }
 
 #container {
@@ -41,6 +42,7 @@ html, body {
 }
 
 #content {
+    height: 100%;
     grid-area: c;
     background-color: white;
 }
@@ -189,8 +191,12 @@ input[name='style-filter'] {
     background-color: #02970f;
     padding: 5px 10px;
     color: white;
-    font-weight: 600;
-}
+    font-size: 1em;
+    margin: 1px 0px;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */}
 
 .searchbox-content {
     background-color: white;
@@ -208,4 +214,56 @@ textarea#cql-filter-query {
 
 #cql-filter {
     display: none;
+}
+
+.radio-buttons {
+    display: flex;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.radio-buttons input {
+    position: absolute !important;
+    clip: rect(0, 0, 0, 0);
+    height: 1px;
+    width: 1px;
+    border: 0;
+    overflow: hidden;
+}
+
+.radio-buttons label {
+    background-color: #e4e4e4;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 14px;
+    line-height: 1;
+    text-align: center;
+    padding: 8px 16px;
+    margin-right: -1px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1);
+    transition: all 0.1s ease-in-out;
+    -webkit-user-select: none; /* Safari */        
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE10+/Edge */
+    user-select: none; /* Standard */}
+
+.radio-buttons label:hover {
+    cursor: pointer;
+}
+
+.radio-buttons input:checked + label {
+    background-color: #a5dc86;
+    box-shadow: none;
+}
+
+.radio-buttons label:first-of-type {
+    border-radius: 4px 0 0 4px;
+}
+
+.radio-buttons label:last-of-type {
+    border-radius: 0 4px 4px 0;
+}
+
+.search-box-helptext {
+    font-size: 0.8em;
 }
