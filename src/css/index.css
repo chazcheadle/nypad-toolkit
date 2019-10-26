@@ -17,11 +17,11 @@ html, body {
     display: grid;
     grid-gap: 1px;
     grid-template-columns: 350px auto;
-    grid-template-rows: 60px auto 20px;
+    grid-template-rows: 60px calc(100% - 80px) 20px;
     grid-template-areas: 
     "h h"
     "m c"
-    "m f";
+    "f f";
     background-color: black;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     }
@@ -36,6 +36,7 @@ html, body {
 }
 
 #menu {
+    height: 100%;
     grid-area: m;
     background-color: rgb(157, 218, 157);
     padding: 10px;

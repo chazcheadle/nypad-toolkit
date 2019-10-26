@@ -41,9 +41,9 @@
                         <h3 class="searchbox-title">Selection Layer</h3>
                         <div class="searchbox-content">
                             <div class="radio-buttons">
-                                <input type="radio" id="selection-layer-protected-area" name="selection-layer-filter" checked=true value="protectedArea" />
+                                <input type="radio" id="selection-layer-protected-area" onclick="changeSelectionLayer(this.value);" name="selection-layer-filter" checked=true value="protectedArea" />
                                 <label for="selection-layer-protected-area">Protected Area</label>
-                                <input type="radio" id="selection-layer-county" name="selection-layer-filter" value="county" />
+                                <input type="radio" id="selection-layer-county" onclick="changeSelectionLayer(this.value);" name="selection-layer-filter" value="county" />
                                 <label for="selection-layer-county">County boundary</label>
                             </div>
                             <div class="search-box-helptext">Choose which feature type is selected on mouse click.</div>

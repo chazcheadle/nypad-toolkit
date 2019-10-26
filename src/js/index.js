@@ -125,6 +125,7 @@ typeSelect.onchange = function () {
 
 addInteractions();
 
+// Load Counties Shoreline layer (WMS)
 var countiesLayer = new ol.layer.Image({
     source: new ol.source.ImageWMS({
         url: url,
@@ -135,7 +136,59 @@ var countiesLayer = new ol.layer.Image({
     })
 })
 countiesLayer.setOpacity(0.8);
-map.addLayer(countiesLayer);
+// map.addLayer(countiesLayer);
+
+// Load Counties Shoreline vector layer (WFS)
+const countyStyle = new ol.style.Style({
+    fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0)'
+    }),
+    stroke: new ol.style.Stroke({
+        color: '#888888',
+        width: 2,
+        lineDash: [4, 4]
+    })
+})
+// when we move the mouse over a feature, we can change its style to
+// highlight it temporarily
+var countyHighlightStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+        color: [43, 112, 37],
+        width: 2
+    }),
+    fill: new ol.style.Fill({
+        color: [142, 196, 137, 0.5]
+    }),
+    zIndex: 1
+});
+
+var countyVectorSource = new ol.source.Vector({
+    format: new ol.format.GeoJSON(),
+    url: function (extent) {
+        return 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
+            'version=1.1.0' +
+            '&request=GetFeature' +
+            '&typename=' + 'nypad_postgres:counties_shoreline' +
+            '&outputFormat=application/json' +
+            '&maxFeatures=100' +
+            '&srsname=EPSG:3857&,EPSG:3857';
+    },
+    strategy: ol.loadingstrategy.bbox,
+});
+
+var countyVectorLayer = new ol.layer.Vector({
+    source: countyVectorSource,
+    style: countyStyle
+})
+
+countyVectorLayer.setSource(countyVectorSource);
+map.addLayer(countyVectorLayer);
+
+let hoverInteraction = new ol.interaction.Select({
+    condition: ol.events.condition.pointerMove,
+    layers: countyVectorLayer  //Setting layers to be hovered
+});
+map.addInteraction(hoverInteraction);
 
 var cqlFilter = '';
 var nypadLayer = new ol.layer.Image({
@@ -157,7 +210,19 @@ var vectorLayer = new ol.layer.Vector({
 })
 map.addLayer(vectorLayer);
 
-
+var selected = null;
+map.on('pointermove', function(e) {
+    if (selected !== null) {
+        selected.setStyle(undefined);
+        selected = null;
+      }
+    
+    map.forEachFeatureAtPixel(e.pixel, function(f) {
+        selected = f;
+        f.setStyle(countyHighlightStyle);
+        return true;
+    });
+});
 /**
  * Handle click events on the map
  * 
@@ -167,7 +232,6 @@ map.addLayer(vectorLayer);
 map.on('singleclick', function (evt) {
 
     var view = map.getView();
-
 
 
     // Pick the feature layer to select
