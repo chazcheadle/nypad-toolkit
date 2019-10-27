@@ -159,7 +159,17 @@ var countyHighlightStyle = new ol.style.Style({
     fill: new ol.style.Fill({
         color: [142, 196, 137, 0.5]
     }),
-    zIndex: 1
+    text: new ol.style.Text({
+        font: '12px Calibri,sans-serif',
+        fill: new ol.style.Fill({
+          color: '#000'
+        }),
+        stroke: new ol.style.Stroke({
+          color: '#f00',
+          width:    3
+        })
+    }),
+    zIndex: 100
 });
 
 var countyVectorSource = new ol.source.Vector({
@@ -172,6 +182,10 @@ var countyVectorSource = new ol.source.Vector({
             '&outputFormat=application/json' +
             '&maxFeatures=100' +
             '&srsname=EPSG:3857&,EPSG:3857';
+    },
+    style: function(feature) {
+        countyHighlightStyle.getText().setText(feature.get('name'));
+        return countyHighlightStyle;
     },
     strategy: ol.loadingstrategy.bbox,
 });
@@ -186,7 +200,7 @@ map.addLayer(countyVectorLayer);
 
 let hoverInteraction = new ol.interaction.Select({
     condition: ol.events.condition.pointerMove,
-    layers: countyVectorLayer  //Setting layers to be hovered
+    layers: [countyVectorLayer]   //Setting layers to be hovered
 });
 map.addInteraction(hoverInteraction);
 
