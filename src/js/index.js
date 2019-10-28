@@ -9,6 +9,9 @@ var bingStyles = [
     'CanvasDark',
     'OrdnanceSurvey'
 ];
+
+var selectionLayerChoice = '';
+
 var map = new ol.Map({
     controls: [
         new ol.control.OverviewMap(),
@@ -184,8 +187,13 @@ var countyVectorSource = new ol.source.Vector({
             '&srsname=EPSG:3857&,EPSG:3857';
     },
     style: function(feature) {
-        countyHighlightStyle.getText().setText(feature.get('name'));
-        return countyHighlightStyle;
+        // if (selectionLayerChoice === 'county') {
+        //     countyHighlightStyle.getText().setText(feature.get('name'));
+        //     return countyHighlightStyle;
+        // }
+        // else {
+        //     return null;
+        // }
     },
     strategy: ol.loadingstrategy.bbox,
 });
@@ -198,11 +206,34 @@ var countyVectorLayer = new ol.layer.Vector({
 countyVectorLayer.setSource(countyVectorSource);
 map.addLayer(countyVectorLayer);
 
-let hoverInteraction = new ol.interaction.Select({
-    condition: ol.events.condition.pointerMove,
-    layers: [countyVectorLayer]   //Setting layers to be hovered
-});
-map.addInteraction(hoverInteraction);
+// let hoverInteraction = new ol.interaction.Select({
+//     condition: ol.events.condition.pointerMove,
+//     layers: [countyVectorLayer]   //Setting layers to be hovered
+// });
+
+// map.addInteraction(hoverInteraction);
+
+function changeSelectionLayer(layer) {
+    console.log(layer);
+    selectionLayerChoice = layer;
+    if (layer === 'county') {
+        console.log('add county hover');
+        // map.addInteraction(hoverInteraction);
+    }
+    else {
+        console.log('remove county hover');
+        // map.removeInteraction(hoverInteraction);
+    }
+
+    // for (let i = 0; i < selectionLayerChoice.length; i++) { 
+    //     if (selectionLayerChoice[i].checked) {
+    //         const selectLayer = selectionLayerChoice[i].value;
+    //         console.log(selectLayer);
+    //     }
+    // }
+
+}
+
 
 var cqlFilter = '';
 var nypadLayer = new ol.layer.Image({
@@ -232,9 +263,14 @@ map.on('pointermove', function(e) {
       }
     
     map.forEachFeatureAtPixel(e.pixel, function(f) {
-        selected = f;
-        f.setStyle(countyHighlightStyle);
-        return true;
+        if (selectionLayerChoice === 'county') {
+            selected = f;
+            f.setStyle(countyHighlightStyle);
+            return true;
+        }
+        else {
+            return false;
+        }
     });
 });
 /**
@@ -253,7 +289,7 @@ map.on('singleclick', function (evt) {
     let selectLayer = '';
     let cqlFilter = '';
     let layerName = '';
-    const selectionLayerChoice = document.getElementsByName('selection-layer-filter');
+    selectionLayerChoice = document.getElementsByName('selection-layer-filter');
     for (let i = 0; i < selectionLayerChoice.length; i++) { 
         if (selectionLayerChoice[i].checked) {
             selectLayer = selectionLayerChoice[i].value;
