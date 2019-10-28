@@ -10,7 +10,7 @@ var bingStyles = [
     'OrdnanceSurvey'
 ];
 
-var selectionLayerChoice = '';
+var selectionLayerChoice = 'protectedArea';
 
 var map = new ol.Map({
     controls: [
@@ -214,14 +214,12 @@ map.addLayer(countyVectorLayer);
 // map.addInteraction(hoverInteraction);
 
 function changeSelectionLayer(layer) {
-    console.log(layer);
+    // console.log(layer);
     selectionLayerChoice = layer;
     if (layer === 'county') {
-        console.log('add county hover');
         // map.addInteraction(hoverInteraction);
     }
     else {
-        console.log('remove county hover');
         // map.removeInteraction(hoverInteraction);
     }
 
@@ -252,7 +250,11 @@ map.addLayer(nypadLayer);
 
 var vectorLayer = new ol.layer.Vector({
     source: null
-})
+});
+// vectorLayer.events.register('loadend', vectorLayer, function(evt) {
+//     map.zoomToExtent(vectorLayer.getDataExtent())
+// });
+
 map.addLayer(vectorLayer);
 
 var selected = null;
@@ -295,7 +297,6 @@ map.on('singleclick', function (evt) {
             selectLayer = selectionLayerChoice[i].value;
         }
     }
-    console.log(selectLayer);
     switch (selectLayer) {
         case 'county':
             layerUrl = countiesLayer.getSource().getGetFeatureInfoUrl(
@@ -323,11 +324,18 @@ map.on('singleclick', function (evt) {
                     if (selectLayer === 'protectedArea') {
                         cqlFilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
                         layerName = 'nypad_postgres:nypad_2017';
-                        populatePopup(feature);
+                        populatePopup(selectLayer, feature);
                     }
                     else {
-                        cqlFilter = 'name = \'' + feature.features[0].properties.name + '\'';
+                        cqlFilter = 'abbreviation = \'' + feature.features[0].properties.abbreviation + '\'';
                         layerName = 'nypad_postgres:counties_shoreline';
+                        fetch(`/county_data?q=${feature.features[0].properties.abbreviation}`)
+                            .then((response) => {
+                                return response.text();
+                            })
+                            .then((data) => {
+                                populatePopup(selectLayer, JSON.parse(data));
+                            });
                     }
 
                     // Retrieve feature vector and add to layer above raster
@@ -360,7 +368,7 @@ map.on('singleclick', function (evt) {
             });
     }
 
-    if (typeSelect.value === 'Navigate') {
+    if (typeSelect.value === 'Navigate' && selectLayer !== 'county') {
         view.animate({
             center: evt.coordinate,
             duration: 1000,
@@ -379,16 +387,26 @@ function listFeatures() {
 }
 
 // Populate info window
-function populatePopup(data) {
+function populatePopup(layer, data) {
     console.log(data);
     document.getElementById('popup').style.display = 'unset';
-    const { properties } = data.features[0];
-    var html = `<p><strong>Area name:</strong> ${properties.loc_nm}</p>
-    <p><strong>Owner:</strong> ${properties.loc_own}</p>
-    <p><strong>Agency:</strong> ${properties.loc_mang}</p>
-    <p><strong>GAP Status:</strong> ${properties.gap_sts}</p>
-    <p><strong>NYPAD ID:</strong> ${properties.nypad_id}</p>    
-    <p><strong>Area:</strong> ${properties.gis_acres}</p>`
+    let html = '';
+    if (layer === 'protectedArea') {
+        const { properties } = data.features[0];
+        document.getElementById('popup-title').innerHTML = `${properties.loc_nm}`;
+        html = `<p><strong>Owner:</strong> ${properties.loc_own}</p>
+        <p><strong>Agency:</strong> ${properties.loc_mang}</p>
+        <p><strong>GAP Status:</strong> ${properties.gap_sts}</p>
+        <p><strong>NYPAD ID:</strong> ${properties.nypad_id}</p>    
+        <p><strong>Area:</strong> ${properties.gis_acres}</p>`
+    }
+    else {
+        const { total, gap_status } = data;
+        document.getElementById('popup-title').innerHTML = `${total.name} County`;
+        html = `<p><strong># Protected areas:</strong> ${formatNumber(total.total)}</p>
+        <p><strong>Protected acreage:</strong> ${formatNumber(total.acres)}</p>
+        <p><strong>Avg. area acreage:</strong> ${formatNumber(total.mean)}</p>`;
+    }
     document.getElementById('popup-content').innerHTML = html;
 }
 
@@ -557,3 +575,7 @@ $(document).ready(function() {
 //         vectorSource.addFeatures(features);
 
 //     })
+
+function formatNumber(num) {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+}

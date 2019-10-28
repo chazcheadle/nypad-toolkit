@@ -4,6 +4,9 @@ import cors from 'cors';
 import path from 'path';
 
 import { autocomplete } from './modules/autocomplete/autocomplete';
+import { countyDataEndpoint } from './modules/countyData/countyData';
+
+
 
 require("dotenv").config();
 
@@ -27,10 +30,16 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/index.html'));
 });
 
+// Return matching text strings for the autocomplete search box.
 app.get('/autocomplete', (req, res) => {
     autocomplete(req, res);
 });
 
+// Retrieve NYPAD data for a county
+app.get('/county_data', (req, res) => {
+    countyDataEndpoint(req, res);
+});
+
 app.listen(port, function () {
-    console.log(`Example app listening on port ${port}`);
+    console.log(`NYPAD Toolkit server listening on port ${port}`);
 });

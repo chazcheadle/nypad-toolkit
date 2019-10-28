@@ -17,9 +17,10 @@ html, body {
     display: grid;
     grid-gap: 1px;
     grid-template-columns: 350px auto;
-    grid-template-rows: 60px calc(100% - 80px) 20px;
+    grid-template-rows: auto auto auto 20px;
     grid-template-areas: 
     "h h"
+    "m t"
     "m c"
     "f f";
     background-color: black;
@@ -36,14 +37,22 @@ html, body {
 }
 
 #menu {
-    height: 100%;
+    /* height: 100%; */
     grid-area: m;
     background-color: rgb(157, 218, 157);
     padding: 10px;
 }
 
+#toolbar {
+    grid-area: t;
+    background-color: rgb(208, 255, 208);
+    padding: 10px;
+    color: rgb(0, 0, 0);
+    font-size: 1em;
+}
+
 #content {
-    height: 100%;
+    /* height: 100%; */
     grid-area: c;
     background-color: white;
 }
@@ -53,7 +62,7 @@ html, body {
     background-color: white;
     font-size: 10pt;
     text-align: center;
-
+    min-height: 1em;
 }
 
 
@@ -64,10 +73,11 @@ html, body {
         display: grid;
         grid-gap: 3px;
         grid-template-columns: 1fr;
-        grid-template-rows: 50px 25px auto 15px;
+        grid-template-rows: auto auto auto 15px;
         grid-template-areas: 
         "h"
         "m"
+        "t"
         "c"
         "f";
     }
@@ -267,4 +277,13 @@ textarea#cql-filter-query {
 
 .search-box-helptext {
     font-size: 0.8em;
+}
+
+#selection-layer span {
+    float: left;
+    margin: 6px 10px;
+}
+
+#selection-layer .radio-buttons {
+    margin-bottom: 0px;
 }
