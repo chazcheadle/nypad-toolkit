@@ -129,17 +129,51 @@ typeSelect.onchange = function () {
 addInteractions();
 
 // Load Counties Shoreline layer (WMS)
-var countiesLayer = new ol.layer.Image({
-    source: new ol.source.ImageWMS({
-        url: url,
-        params: {
-            'LAYERS': 'nypad_postgres:counties_shoreline',
-        },
-        serverType: 'geoserver'
+// var countiesLayer = new ol.layer.Image({
+//     source: new ol.source.ImageWMS({
+//         url: url,
+//         params: {
+//             'LAYERS': 'nypad_postgres:counties_shoreline',
+//         },
+//         serverType: 'geoserver'
+//     })
+// })
+// countiesLayer.setOpacity(0.8);
+// map.addLayer(countiesLayer);
+
+// Load Counties Shoreline vector layer (WFS)
+const citiesStyle = new ol.style.Style({
+    fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0)'
+    }),
+    stroke: new ol.style.Stroke({
+        color: '#8888FF',
+        width: 1,
+        // lineDash: [4, 4]
     })
 })
-countiesLayer.setOpacity(0.8);
-// map.addLayer(countiesLayer);
+var citiesVectorSource = new ol.source.Vector({
+    format: new ol.format.GeoJSON(),
+    url: function (extent) {
+        return 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
+            'version=1.1.0' +
+            '&request=GetFeature' +
+            '&typename=' + 'nypad_postgres:cities_towns' +
+            '&outputFormat=application/json' +
+            // '&maxFeatures=100' +
+            '&srsname=EPSG:3857&,EPSG:3857';
+    },
+    style: function(feature) {
+    },
+    strategy: ol.loadingstrategy.bbox,
+});
+var citiesVectorLayer = new ol.layer.Vector({
+    source: citiesVectorSource,
+    style: citiesStyle
+})
+// citiesVectorLayer.setSource(citiesVectorSource);
+citiesVectorLayer.setOpacity(0.8);
+map.addLayer(citiesVectorLayer);
 
 // Load Counties Shoreline vector layer (WFS)
 const countyStyle = new ol.style.Style({
@@ -205,6 +239,9 @@ var countyVectorLayer = new ol.layer.Vector({
 
 countyVectorLayer.setSource(countyVectorSource);
 map.addLayer(countyVectorLayer);
+
+
+
 
 // let hoverInteraction = new ol.interaction.Select({
 //     condition: ol.events.condition.pointerMove,
