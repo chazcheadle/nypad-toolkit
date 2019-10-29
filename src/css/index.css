@@ -148,7 +148,19 @@ html, body {
 }
 
 #popup-content {
-    padding: 0px 10px;
+    /* padding: 0px 10px; */
+}
+
+#popup-content .attr-table {
+    border-right: 1px solid lightgray;
+    border-bottom: 1px solid lightgray;
+    border-left: 1px solid lightgray;
+    /* margin: 10px 0px; */
+}
+
+#popup-content .attr-table div {
+    border-top: 1px solid lightgray;
+    padding: 3px 6px;
 }
 
 #info {

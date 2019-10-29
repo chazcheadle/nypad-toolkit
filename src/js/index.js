@@ -215,6 +215,10 @@ map.addLayer(countyVectorLayer);
 
 function changeSelectionLayer(layer) {
     // console.log(layer);
+    // Clear selected feature overlay.
+    vectorLayer.setSource();
+    // Close info box.
+    closer.click();
     selectionLayerChoice = layer;
     if (layer === 'county') {
         // map.addInteraction(hoverInteraction);
@@ -392,20 +396,27 @@ function populatePopup(layer, data) {
     document.getElementById('popup').style.display = 'unset';
     let html = '';
     if (layer === 'protectedArea') {
-        const { properties } = data.features[0];
-        document.getElementById('popup-title').innerHTML = `${properties.loc_nm}`;
-        html = `<p><strong>Owner:</strong> ${properties.loc_own}</p>
-        <p><strong>Agency:</strong> ${properties.loc_mang}</p>
-        <p><strong>GAP Status:</strong> ${properties.gap_sts}</p>
-        <p><strong>NYPAD ID:</strong> ${properties.nypad_id}</p>    
-        <p><strong>Area:</strong> ${properties.gis_acres}</p>`
+        const {
+            loc_mang,
+            loc_nm,
+            loc_own,
+            gap_sts,
+            nypad_id,
+            gis_acres
+        } = data.features[0].properties;
+        document.getElementById('popup-title').innerHTML = `${loc_nm}`;
+        html = `<div class='attr-table'><div>Owner: ${loc_own}</div>
+        <div>Agency: ${loc_mang}</div>
+        <div>GAP Status: ${gap_sts}</div>
+        <div>NYPAD ID: ${nypad_id}</div>    
+        <div>Acres: ${formatNumber(gis_acres)}</div></div>`
     }
     else {
         const { total, gap_status } = data;
         document.getElementById('popup-title').innerHTML = `${total.name} County`;
-        html = `<p><strong># Protected areas:</strong> ${formatNumber(total.total)}</p>
-        <p><strong>Protected acreage:</strong> ${formatNumber(total.acres)}</p>
-        <p><strong>Avg. area acreage:</strong> ${formatNumber(total.mean)}</p>`;
+        html = `<div class='attr-table'><div># Protected areas: ${formatNumber(total.total)}</div>
+        <div>Protected acreage: ${formatNumber(total.acres)}</div>
+        <div>Avg. area acreage: ${formatNumber(total.mean)}</div></div>`;
     }
     document.getElementById('popup-content').innerHTML = html;
 }
@@ -479,8 +490,10 @@ closer.onclick = function() {
     document.getElementById('popup').style.display = 'none';
 }
 
-// Initialize search select field for autocomplete.
+
+// Initialize jQuery UI plugins on page load.
 $(document).ready(function() {
+    // Initialize search select field for autocomplete.
     $('#local-name').select2({
         ajax: {
             url: '/autocomplete',
@@ -493,6 +506,11 @@ $(document).ready(function() {
             }
         }
     });
+    // jQuery Accordion control for the menu bar.
+    $( "#accordion" ).accordion({
+        heightStyle: "content"
+    });
+
 });
 
 
