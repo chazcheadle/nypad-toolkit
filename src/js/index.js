@@ -238,7 +238,6 @@ var countyVectorLayer = new ol.layer.Vector({
 })
 
 countyVectorLayer.setSource(countyVectorSource);
-map.addLayer(countyVectorLayer);
 
 
 
@@ -273,6 +272,18 @@ function changeSelectionLayer(layer) {
 
 }
 
+var townsLayer = new ol.layer.Image({
+    source: new ol.source.ImageWMS({
+        url: url,
+        params: {
+            'LAYERS': 'nypad_postgres:cities_towns',
+            'CQL_FILTER': cqlFilter || null,
+        },
+        serverType: 'geoserver'
+    })
+})
+townsLayer.setOpacity(0.8);
+
 
 var cqlFilter = '';
 var nypadLayer = new ol.layer.Image({
@@ -287,7 +298,11 @@ var nypadLayer = new ol.layer.Image({
     })
 })
 nypadLayer.setOpacity(0.8);
+
+
 map.addLayer(nypadLayer);
+map.addLayer(countyVectorLayer);
+map.addLayer(townsLayer);
 
 var vectorLayer = new ol.layer.Vector({
     source: null
