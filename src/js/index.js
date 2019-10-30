@@ -129,17 +129,17 @@ typeSelect.onchange = function () {
 addInteractions();
 
 // Load Counties Shoreline layer (WMS)
-// var countiesLayer = new ol.layer.Image({
-//     source: new ol.source.ImageWMS({
-//         url: url,
-//         params: {
-//             'LAYERS': 'nypad_postgres:counties_shoreline',
-//         },
-//         serverType: 'geoserver'
-//     })
-// })
-// countiesLayer.setOpacity(0.8);
-// map.addLayer(countiesLayer);
+var countiesLayer = new ol.layer.Image({
+    source: new ol.source.ImageWMS({
+        url: url,
+        params: {
+            'LAYERS': 'nypad_postgres:counties_shoreline',
+        },
+        serverType: 'geoserver'
+    })
+})
+countiesLayer.setOpacity(0.8);
+map.addLayer(countiesLayer);
 
 // Load Counties Shoreline vector layer (WFS)
 const citiesStyle = new ol.style.Style({

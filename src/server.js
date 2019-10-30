@@ -2,11 +2,10 @@ import express from 'express';
 import bodyParser from "body-parser";
 import cors from 'cors';
 import path from 'path';
+import responseTime from 'response-time';
 
 import { autocomplete } from './modules/autocomplete/autocomplete';
 import { countyDataEndpoint } from './modules/countyData/countyData';
-
-
 
 require("dotenv").config();
 
@@ -20,6 +19,8 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(responseTime())
 
 app.use(express.static('dist'))
 app.use('/js', express.static(path.join(__dirname + 'js')));

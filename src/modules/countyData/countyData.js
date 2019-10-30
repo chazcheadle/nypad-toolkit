@@ -1,4 +1,5 @@
 import knex from 'knex';
+import redis from 'redis';
 
 require("dotenv").config();
 
@@ -7,6 +8,13 @@ const db = knex({
   connection: process.env.DB_SERVER || '',
   searchPath: ["knex", "public"],
   ssl: true
+});
+
+// Set up redis
+const redisClient = redis.createClient({ host: process.env.REDIS_HOST });
+
+redisClient.on('connect', () => {
+    console.log('Redis connected');
 });
 
 /**
@@ -21,6 +29,7 @@ const getCountySummaryData = (req) => {
     if (!req.query.q) {
         // return;
     }
+
     return db
         .raw(`
             SELECT name,
@@ -71,12 +80,38 @@ const getCountyGAPStatusData = (req) => {
 }
 
 const countyDataEndpoint = (req, res) => {
-    Promise.all([getCountySummaryData(req), getCountyGAPStatusData(req)])
-        .then((results) => {
-            res.send(results.reduce((result, current) => {
-                return Object.assign(result, current);
-              }, {}));
-        });
+
+    const county = req.query.q;
+    redisClient.get(`county:${county}`, async (error, cachedData) => {
+        if (cachedData) {
+            console.log(`CACHE HIT: county:${county}`);
+            res.send(JSON.parse(cachedData));
+        } else {
+            try {
+                console.log(`CACHE MISS: county:${county}`);
+                Promise.all([getCountySummaryData(req), getCountyGAPStatusData(req)])
+                    .then((results) => {
+                        const data = results.reduce((result, current) => {
+                                return Object.assign(result, current);
+                            }, {});
+                        console.log(`CACHE FILL: county:${county}`);
+                        redisClient.set(`county:${county}`, JSON.stringify(data));
+                        res.send(data);
+                    });
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    });
+
+
+
+    // Promise.all([getCountySummaryData(req), getCountyGAPStatusData(req)])
+    //     .then((results) => {
+    //         res.send(results.reduce((result, current) => {
+    //             return Object.assign(result, current);
+    //           }, {}));
+    //     });
 }
 
 export { countyDataEndpoint }
