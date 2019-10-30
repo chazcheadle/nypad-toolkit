@@ -79,8 +79,26 @@ const getCountyGAPStatusData = (req) => {
         });
 }
 
-const countyDataEndpoint = (req, res) => {
+/**
+ * Warm the Redis cache with County data.
+ */
+const countyDataWarmCache = async() => {
 
+    await db
+        .select('abbreviation')
+        .from('counties_shoreline')
+        .then((result) => {
+            if (result) {
+                console.log(result);
+                result.map(r)
+            }
+            else {
+                console.log('boo');
+            }
+        });
+}
+
+const retrieveCountyData = (req, res) => {
     const county = req.query.q;
     redisClient.get(`county:${county}`, async (error, cachedData) => {
         if (cachedData) {
@@ -103,15 +121,23 @@ const countyDataEndpoint = (req, res) => {
             }
         }
     });
+}
 
 
+const countyDataEndpoint = (req, res) => {
 
-    // Promise.all([getCountySummaryData(req), getCountyGAPStatusData(req)])
-    //     .then((results) => {
-    //         res.send(results.reduce((result, current) => {
-    //             return Object.assign(result, current);
-    //           }, {}));
-    //     });
+    if (req.query.action === 'warmcache') {
+        console.log('warm the cache!');
+        countyDataWarmCache();
+    }
+
+    if (!req.query.q) {
+        return;
+    }
+    else {
+        retrieveCountyData(req, res);
+    }
+    
 }
 
 export { countyDataEndpoint }
