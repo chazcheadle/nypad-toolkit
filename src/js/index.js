@@ -432,10 +432,14 @@ function populatePopup(layer, data) {
     }
     else {
         const { total, gap_status } = data;
+        console.log(total);
+        const percent = 100 * (total.pa_acres / total.county_acres);
         document.getElementById('popup-title').innerHTML = `${total.name} County`;
-        html = `<div class='attr-table'><div># Protected areas: ${formatNumber(total.total)}</div>
-        <div>Protected acreage: ${formatNumber(total.acres)}</div>
-        <div>Avg. area acreage: ${formatNumber(total.mean)}</div></div>`;
+        html = `<div class='attr-table'><div># Protected areas: ${total.pa_count}</div>
+        <div>Protected acreage: ${formatNumber(total.pa_acres)}</div>
+        <div>Avg. PA acreage: ${formatNumber(total.pa_mean)}</div>
+        <div>County acreage: ${formatNumber(total.county_acres)}</div>
+        <div>County Protected area: ${parseInt(percent)}%</div></div>`;
     }
     document.getElementById('popup-content').innerHTML = html;
 }

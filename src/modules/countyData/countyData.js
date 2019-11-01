@@ -28,15 +28,16 @@ redisClient.on('connect', () => {
 const getCountySummaryData = (county) => {
     return db
         .raw(`
-            SELECT name,
-                COUNT(nypad_id) total,
-                CEIL(SUM(ST_Area(nypad_2017.wkb_geometry) * 0.00024711)) acres,
-                CEIL(AVG(ST_Area(nypad_2017.wkb_geometry) * 0.00024711)) mean
-            FROM nypad_2017, counties_shoreline
-            WHERE (ST_Contains(counties_shoreline.wkb_geometry, nypad_2017.wkb_geometry)
-                OR ST_Overlaps(counties_shoreline.wkb_geometry, nypad_2017.wkb_geometry))
-                AND abbreviation = '${county}'
-            GROUP BY name
+        SELECT name,
+            COUNT(nypad_id) pa_count,
+            CEIL(SUM(ST_Area(nypad_2017.wkb_geometry) * 0.00024711)) pa_acres,
+            CEIL(AVG(ST_Area(nypad_2017.wkb_geometry) * 0.00024711)) pa_mean,
+            CEIL(ST_Area(counties_shoreline.wkb_geometry) * 0.00024711) county_acres
+        FROM nypad_2017, counties_shoreline
+        WHERE (ST_Contains(counties_shoreline.wkb_geometry, nypad_2017.wkb_geometry)
+            OR ST_Overlaps(counties_shoreline.wkb_geometry, nypad_2017.wkb_geometry))
+            AND abbreviation = '${county}'
+        GROUP BY name, county_acres
             ORDER BY name`)
         .then((result) => {
             return (result.rows) ? {total: result.rows[0]} : {};
