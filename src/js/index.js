@@ -274,6 +274,8 @@ map.addLayer(countyVectorLayer);
 var vectorLayer = new ol.layer.Vector({
     source: null
 });
+
+
 // vectorLayer.events.register('loadend', vectorLayer, function(evt) {
 //     map.zoomToExtent(vectorLayer.getDataExtent())
 // });
@@ -334,6 +336,7 @@ map.on('singleclick', function (evt) {
             break;
     }
 
+    // Get feature information for clicked WMS layer.
     if (layerUrl) {
         fetch(layerUrl)
             .then((response) => {
@@ -342,7 +345,6 @@ map.on('singleclick', function (evt) {
             .then((text) => {
                 var feature = JSON.parse(text)
                 if (feature && feature.features.length) {
-
                     // Set WMS request parameters for the chosen layer type.
                     if (selectLayer === 'protectedArea') {
                         cqlFilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
@@ -361,41 +363,55 @@ map.on('singleclick', function (evt) {
                             });
                     }
 
+                    // Load selected feature as a vector.
+                    let featureUrl = 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
+                        'version=1.1.0' +
+                        '&request=GetFeature' +
+                        '&typename=' + layerName +
+                        '&CQL_FILTER=' + cqlFilter +
+                        '&outputFormat=application/json' +
+                        '&maxFeatures=50' +
+                        '&srsname=EPSG:3857&,EPSG:3857';
+
                     // Retrieve feature vector and add to layer above raster
                     var vectorSource = new ol.source.Vector({
                         format: new ol.format.GeoJSON(),
-                        url: function (extent) {
-                            return 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
-                                'version=1.1.0' +
-                                '&request=GetFeature' +
-                                '&typename=' + layerName +
-                                '&CQL_FILTER=' + cqlFilter +
-                                '&outputFormat=application/json' +
-                                '&maxFeatures=50' +
-                                '&srsname=EPSG:3857&,EPSG:3857';
+                        loader: function(extent, resolution, projection) {
+                            var proj = projection.getCode();
+                            var url = featureUrl
+                            var xhr = new XMLHttpRequest();
+                            xhr.open('GET', url);
+                            var onError = function() {
+                                vectorSource.removeLoadedExtent(extent);
+                            }
+                            xhr.onerror = onError;
+                            xhr.onload = function() {
+                                if (xhr.status == 200) {
+                                    vectorSource.addFeatures(
+                                    vectorSource.getFormat().readFeatures(xhr.responseText));
+                                } else {
+                                    onError();
+                                }
+                            }
+                            xhr.send();
                         },
                         strategy: ol.loadingstrategy.bbox,
-                        style: new ol.style.Style({
-                            fill: new ol.style.Fill({
-                                color: 'rgba(255, 255, 255, 1)'
-                            }),
-                            stroke: new ol.style.Stroke({
-                                color: '#ffcc33',
-                                width: 2
-                            })
-                        })
-                    });
-
+                    })
                     vectorLayer.setSource(vectorSource);
+
+                    // Zoom to loaded feature
+                    // vectorSource.once('change', (event) => {
+                    //     map.getView().fit(vectorLayer.getSource().getExtent(), (map.getSize()));
+                    // })
                 }
             });
     }
 
+    // Zoom in to a resonable level, but do not zoom out if the user has already zoomed in manually.
     if (typeSelect.value === 'Navigate' && selectLayer !== 'county') {
         view.animate({
             center: evt.coordinate,
             duration: 1000,
-            // Zoom in to a resonable level, but do not zoom out if the user has already zoomed in manually.
             zoom: map.getView().getZoom() > 7 ? map.getView().getZoom() : 10
         })
     }
