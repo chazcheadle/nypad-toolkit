@@ -25,11 +25,7 @@ redisClient.on('connect', () => {
  * - NYPAD feature total acreage
  * - mean acreage for features in county
  */
-const getCountySummaryData = (req) => {
-    if (!req.query.q) {
-        // return;
-    }
-
+const getCountySummaryData = (county) => {
     return db
         .raw(`
             SELECT name,
@@ -39,7 +35,7 @@ const getCountySummaryData = (req) => {
             FROM nypad_2017, counties_shoreline
             WHERE (ST_Contains(counties_shoreline.wkb_geometry, nypad_2017.wkb_geometry)
                 OR ST_Overlaps(counties_shoreline.wkb_geometry, nypad_2017.wkb_geometry))
-                AND abbreviation = '${req.query.q}'
+                AND abbreviation = '${county}'
             GROUP BY name
             ORDER BY name`)
         .then((result) => {
@@ -54,10 +50,7 @@ const getCountySummaryData = (req) => {
 /**
  * County NYPAD GAP statistics callback
  */
-const getCountyGAPStatusData = (req) => {
-    if (!req.query.q) {
-        // return;
-    }
+const getCountyGAPStatusData = (county) => {
     return db
         .raw(`
             SELECT gap_sts,
@@ -67,7 +60,7 @@ const getCountyGAPStatusData = (req) => {
             FROM nypad_2017, counties_shoreline
             WHERE (ST_Contains(counties_shoreline.wkb_geometry, nypad_2017.wkb_geometry)
                 OR ST_Overlaps(counties_shoreline.wkb_geometry, nypad_2017.wkb_geometry))
-                AND abbreviation = '${req.query.q}'
+                AND abbreviation = '${county}'
             GROUP BY gap_sts
             ORDER BY gap_sts`)
         .then((result) => {
@@ -81,16 +74,29 @@ const getCountyGAPStatusData = (req) => {
 
 /**
  * Warm the Redis cache with County data.
+ * 
+ * For
  */
-const countyDataWarmCache = async() => {
+const countyDataWarmCache = async () => {
 
     await db
         .select('abbreviation')
         .from('counties_shoreline')
-        .then((result) => {
-            if (result) {
-                console.log(result);
-                result.map(r)
+        .then((results) => {
+            if (results) {
+                results.forEach((county, i) => {
+                    Promise.all([getCountySummaryData(county.abbreviation), getCountyGAPStatusData(county.abbreviation)])
+                        .then((results) => {
+                            const data = results.reduce((result, current) => {
+                                    return Object.assign(result, current);
+                                }, {});
+                            console.log(`CACHE WARM: county:${county.abbreviation}`);
+                            redisClient.set(`county:${county.abbreviation}`, JSON.stringify(data));
+                        })
+                        .catch((error) => {
+                            console.log(error);
+                        });
+                });
             }
             else {
                 console.log('boo');
@@ -98,34 +104,9 @@ const countyDataWarmCache = async() => {
         });
 }
 
-const retrieveCountyData = (req, res) => {
-    const county = req.query.q;
-    redisClient.get(`county:${county}`, async (error, cachedData) => {
-        if (cachedData) {
-            console.log(`CACHE HIT: county:${county}`);
-            res.send(JSON.parse(cachedData));
-        } else {
-            try {
-                console.log(`CACHE MISS: county:${county}`);
-                Promise.all([getCountySummaryData(req), getCountyGAPStatusData(req)])
-                    .then((results) => {
-                        const data = results.reduce((result, current) => {
-                                return Object.assign(result, current);
-                            }, {});
-                        console.log(`CACHE FILL: county:${county}`);
-                        redisClient.set(`county:${county}`, JSON.stringify(data));
-                        res.send(data);
-                    });
-            } catch (error) {
-                console.log(error);
-            }
-        }
-    });
-}
+const countyDataEndpoint = async (req, res) => {
 
-
-const countyDataEndpoint = (req, res) => {
-
+    let data = {};
     if (req.query.action === 'warmcache') {
         console.log('warm the cache!');
         countyDataWarmCache();
@@ -135,9 +116,30 @@ const countyDataEndpoint = (req, res) => {
         return;
     }
     else {
-        retrieveCountyData(req, res);
+        const county = req.query.q;
+        redisClient.get(`county:${county}`, async (error, cachedData) => {
+            if (cachedData) {
+                console.log(`CACHE HIT: county:${county}`);
+                res.send(JSON.parse(cachedData));
+            } else {
+                console.log(`CACHE MISS: county:${county}`);
+                data = await Promise.all([getCountySummaryData(county), getCountyGAPStatusData(county)])
+                    .then((results) => {
+                        data = results.reduce((result, current) => {
+                                return Object.assign(result, current);
+                            }, {});
+                        console.log(`CACHE FILL: county:${county}`);
+                        redisClient.set(`county:${county}`, JSON.stringify(data));
+                        return data;
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+                res.send(data);
+            }
+        });
     }
-    
+    // return data;    
 }
 
 export { countyDataEndpoint }
