@@ -34,7 +34,7 @@ var map = new ol.Map({
                     preload: Infinity,
                     source: new ol.source.BingMaps({
                         key: bingMapsApiKey,
-                        imagerySet: bingStyles[2]
+                        imagerySet: bingStyles[1    ]
                     })
                 }),
                 new ol.layer.Tile({
@@ -54,7 +54,7 @@ var map = new ol.Map({
 
 // Create a blank vector layer to draw on.
 var userSource = new ol.source.Vector();
-var userLayer = new ol.layer.Vector({
+var userVectorLayer = new ol.layer.Vector({
     source: userSource,
     style: new ol.style.Style({
         fill: new ol.style.Fill({
@@ -72,7 +72,7 @@ var userLayer = new ol.layer.Vector({
         })
     })
 });
-map.addLayer(userLayer);
+map.addLayer(userVectorLayer);
 // var modify = new ol.interaction.Modify({ source: userSource });
 // map.addInteraction(modify);
 
@@ -139,41 +139,8 @@ var countiesLayer = new ol.layer.Image({
     })
 })
 countiesLayer.setOpacity(0.8);
-map.addLayer(countiesLayer);
 
-// Load Counties Shoreline vector layer (WFS)
-const citiesStyle = new ol.style.Style({
-    fill: new ol.style.Fill({
-        color: 'rgba(255, 255, 255, 0)'
-    }),
-    stroke: new ol.style.Stroke({
-        color: '#8888FF',
-        width: 1,
-        // lineDash: [4, 4]
-    })
-})
-var citiesVectorSource = new ol.source.Vector({
-    format: new ol.format.GeoJSON(),
-    url: function (extent) {
-        return 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
-            'version=1.1.0' +
-            '&request=GetFeature' +
-            '&typename=' + 'nypad_postgres:cities_towns' +
-            '&outputFormat=application/json' +
-            // '&maxFeatures=100' +
-            '&srsname=EPSG:3857&,EPSG:3857';
-    },
-    style: function(feature) {
-    },
-    strategy: ol.loadingstrategy.bbox,
-});
-var citiesVectorLayer = new ol.layer.Vector({
-    source: citiesVectorSource,
-    style: citiesStyle
-})
-// citiesVectorLayer.setSource(citiesVectorSource);
-citiesVectorLayer.setOpacity(0.8);
-map.addLayer(citiesVectorLayer);
+
 
 // Load Counties Shoreline vector layer (WFS)
 const countyStyle = new ol.style.Style({
@@ -186,6 +153,7 @@ const countyStyle = new ol.style.Style({
         lineDash: [4, 4]
     })
 })
+
 // when we move the mouse over a feature, we can change its style to
 // highlight it temporarily
 var countyHighlightStyle = new ol.style.Style({
@@ -203,7 +171,7 @@ var countyHighlightStyle = new ol.style.Style({
         }),
         stroke: new ol.style.Stroke({
           color: '#f00',
-          width:    3
+          width: 3
         })
     }),
     zIndex: 100
@@ -282,8 +250,7 @@ var townsLayer = new ol.layer.Image({
         serverType: 'geoserver'
     })
 })
-townsLayer.setOpacity(0.8);
-
+townsLayer.setOpacity(1);
 
 var cqlFilter = '';
 var nypadLayer = new ol.layer.Image({
@@ -299,10 +266,10 @@ var nypadLayer = new ol.layer.Image({
 })
 nypadLayer.setOpacity(0.8);
 
-
 map.addLayer(nypadLayer);
-map.addLayer(countyVectorLayer);
 map.addLayer(townsLayer);
+map.addLayer(countiesLayer);
+map.addLayer(countyVectorLayer);
 
 var vectorLayer = new ol.layer.Vector({
     source: null
@@ -331,6 +298,7 @@ map.on('pointermove', function(e) {
         }
     });
 });
+
 /**
  * Handle click events on the map
  * 
@@ -340,7 +308,6 @@ map.on('pointermove', function(e) {
 map.on('singleclick', function (evt) {
 
     var view = map.getView();
-
 
     // Pick the feature layer to select
     let layerUrl = '';
@@ -567,6 +534,11 @@ $(document).ready(function() {
 
 
 
+function formatNumber(num) {
+    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+}
+
+
 //// WIP: Feature drawing and saving code.
 // draw.on('drawend', function(event) {
 //     console.log(event.feature);
@@ -646,6 +618,37 @@ $(document).ready(function() {
 
 //     })
 
-function formatNumber(num) {
-    return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
-}
+
+// // Load Cities and Towns vector layer (WFS)
+// const citiesStyle = new ol.style.Style({
+//     fill: new ol.style.Fill({
+//         color: 'rgba(255, 255, 255, 0)'
+//     }),
+//     stroke: new ol.style.Stroke({
+//         color: '#FF8888',
+//         width: 2,
+//         // lineDash: [4, 4]
+//     })
+// })
+// var citiesVectorSource = new ol.source.Vector({
+//     format: new ol.format.GeoJSON(),
+//     url: function (extent) {
+//         return 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
+//             'version=1.1.0' +
+//             '&request=GetFeature' +
+//             '&typename=' + 'nypad_postgres:cities_towns' +
+//             '&outputFormat=application/json' +
+//             // '&maxFeatures=100' +
+//             '&srsname=EPSG:3857&,EPSG:3857';
+//     },
+//     style: function(feature) {
+//     },
+//     strategy: ol.loadingstrategy.bbox,
+// });
+// var citiesVectorLayer = new ol.layer.Vector({
+//     source: citiesVectorSource,
+//     style: citiesStyle
+// })
+// // citiesVectorLayer.setSource(citiesVectorSource);
+// citiesVectorLayer.setOpacity(0.8);
+
