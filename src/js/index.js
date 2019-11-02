@@ -72,7 +72,6 @@ var userVectorLayer = new ol.layer.Vector({
         })
     })
 });
-map.addLayer(userVectorLayer);
 // var modify = new ol.interaction.Modify({ source: userSource });
 // map.addInteraction(modify);
 
@@ -208,8 +207,6 @@ var countyVectorLayer = new ol.layer.Vector({
 countyVectorLayer.setSource(countyVectorSource);
 
 
-
-
 // let hoverInteraction = new ol.interaction.Select({
 //     condition: ol.events.condition.pointerMove,
 //     layers: [countyVectorLayer]   //Setting layers to be hovered
@@ -266,10 +263,9 @@ var nypadLayer = new ol.layer.Image({
 })
 nypadLayer.setOpacity(0.8);
 
-map.addLayer(nypadLayer);
-map.addLayer(townsLayer);
-map.addLayer(countiesLayer);
-map.addLayer(countyVectorLayer);
+
+var vectorSource = new ol.source.Vector({});
+
 
 var vectorLayer = new ol.layer.Vector({
     source: null
@@ -280,6 +276,11 @@ var vectorLayer = new ol.layer.Vector({
 //     map.zoomToExtent(vectorLayer.getDataExtent())
 // });
 
+map.addLayer(userVectorLayer);
+map.addLayer(nypadLayer);
+map.addLayer(townsLayer);
+// map.addLayer(countiesLayer);
+map.addLayer(countyVectorLayer);
 map.addLayer(vectorLayer);
 
 var selected = null;
@@ -374,7 +375,7 @@ map.on('singleclick', function (evt) {
                         '&srsname=EPSG:3857&,EPSG:3857';
 
                     // Retrieve feature vector and add to layer above raster
-                    var vectorSource = new ol.source.Vector({
+                    vectorSource = new ol.source.Vector({
                         format: new ol.format.GeoJSON(),
                         loader: function(extent, resolution, projection) {
                             var proj = projection.getCode();
@@ -419,9 +420,9 @@ map.on('singleclick', function (evt) {
 
 // List features on user drawing layer
 function listFeatures() {
-    console.log(source.getFeatures());
+    // console.log(vectorSource.getFeatures());
     var writer = new ol.format.GeoJSON();
-    var geojsonStr = writer.writeFeatures(source.getFeatures());
+    var geojsonStr = writer.writeFeatures(vectorSource.getFeatures());
     console.log(geojsonStr);
 }
 

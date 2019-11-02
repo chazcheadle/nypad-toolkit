@@ -117,17 +117,16 @@ html, body {
 }
 
 #popup {
-    top: 20px;
-    right: 50px;
+    right: 10px;
+    top: 10px;
     background-color: #ffffff;
     position: absolute;
-    margin: 20px;
-    border: 2px solid #dedede;
-    border-radius: 3px;
+    border: 1px solid #000000;
     background-color: white;
+    width: 350px;
+    height: calc(100% - 40px);
     -webkit-filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));
-    width: 300px;
+    filter: drop-shadow(0 1px 4px rgba(0,0,0,0.2));    
     z-index: 1000;
     display: none;
 }
