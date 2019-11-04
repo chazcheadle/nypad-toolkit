@@ -34,8 +34,7 @@ const getCountySummaryData = (county) => {
             CEIL(ST_Area(c.wkb_geometry) * 0.00024711) county_acres,
             CEIL(SUM(ST_Area(ST_Intersection(n.wkb_geometry, c.wkb_geometry)) * 0.00024711)) As pa_acres
         FROM nypad_2017 n, counties_shoreline c
-        WHERE (ST_Overlaps(c.wkb_geometry, n.wkb_geometry)
-            OR  ST_Contains(c.wkb_geometry, n.wkb_geometry))
+        WHERE ST_INTERSECTS(c.wkb_geometry, n.wkb_geometry)
             AND abbreviation = '${county}'
         GROUP BY name, county_acres;`)
         .then((result) => {
@@ -58,8 +57,7 @@ const getCountyGAPStatusData = (county) => {
                 CEIL(SUM(ST_Area(ST_Intersection(n.wkb_geometry, c.wkb_geometry)) * 0.00024711)) acres,
                 CEIL(AVG(ST_Area(n.wkb_geometry) * 0.00024711)) mean
             FROM nypad_2017 n, counties_shoreline c
-            WHERE (ST_Contains(c.wkb_geometry, n.wkb_geometry)
-                OR ST_Overlaps(c.wkb_geometry, n.wkb_geometry))
+            WHERE ST_INTERSECTS(c.wkb_geometry, n.wkb_geometry)
                 AND abbreviation = '${county}'
             GROUP BY gap_sts
             ORDER BY gap_sts`)
