@@ -157,11 +157,11 @@ const countyStyle = new ol.style.Style({
 // highlight it temporarily
 var countyHighlightStyle = new ol.style.Style({
     stroke: new ol.style.Stroke({
-        color: [43, 112, 37],
-        width: 2
+        color: [43, 200, 37],
+        width: 1
     }),
     fill: new ol.style.Fill({
-        color: [142, 196, 137, 0.5]
+        color: [0, 255, 0, 0.25]
     }),
     text: new ol.style.Text({
         font: '12px Calibri,sans-serif',
@@ -175,6 +175,29 @@ var countyHighlightStyle = new ol.style.Style({
     }),
     zIndex: 100
 });
+
+// Style for selected feature
+var featureSelectedStyle = new ol.style.Style({
+    stroke: new ol.style.Stroke({
+        color: [53, 122, 47],
+        width: 3
+    }),
+    fill: new ol.style.Fill({
+        color: [200, 255, 200, 0.2]
+    }),
+    text: new ol.style.Text({
+        font: '12px Calibri,sans-serif',
+        fill: new ol.style.Fill({
+          color: '#000'
+        }),
+        stroke: new ol.style.Stroke({
+          color: '#f00',
+          width: 3
+        })
+    }),
+    zIndex: 100
+});
+
 
 var countyVectorSource = new ol.source.Vector({
     format: new ol.format.GeoJSON(),
@@ -279,7 +302,7 @@ var vectorLayer = new ol.layer.Vector({
 map.addLayer(userVectorLayer);
 map.addLayer(nypadLayer);
 map.addLayer(townsLayer);
-// map.addLayer(countiesLayer);
+map.addLayer(countiesLayer);
 map.addLayer(countyVectorLayer);
 map.addLayer(vectorLayer);
 
@@ -399,6 +422,7 @@ map.on('singleclick', function (evt) {
                         strategy: ol.loadingstrategy.bbox,
                     })
                     vectorLayer.setSource(vectorSource);
+                    vectorLayer.setStyle(featureSelectedStyle);
 
                     // Zoom to loaded feature
                     // vectorSource.once('change', (event) => {
@@ -457,7 +481,7 @@ function populatePopup(layer, data) {
             <div>Avg. PA acreage: ${formatNumber(total.pa_mean)}</div>
             <div>County acreage: ${formatNumber(total.county_acres)}</div>
             <div>County Protected area: ${parseInt(percent)}%</div>
-            <div class="gap-status-head">GAP Status Staticistics</div>`;
+            <div class="gap-status-head">GAP Status Statistics</div>`;
         gap_status.forEach((data) => {
             html += `<div>GAP ${data.gap_sts}</div>
             <div>Total features: ${formatNumber(data.total)}</div>
