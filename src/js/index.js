@@ -449,14 +449,22 @@ function populatePopup(layer, data) {
     }
     else {
         const { total, gap_status } = data;
-        console.log(total);
         const percent = 100 * (total.pa_acres / total.county_acres);
         document.getElementById('popup-title').innerHTML = `${total.name} County`;
-        html = `<div class='attr-table'><div># Protected areas: ${total.pa_count}</div>
-        <div>Protected acreage: ${formatNumber(total.pa_acres)}</div>
-        <div>Avg. PA acreage: ${formatNumber(total.pa_mean)}</div>
-        <div>County acreage: ${formatNumber(total.county_acres)}</div>
-        <div>County Protected area: ${parseInt(percent)}%</div></div>`;
+        html = `<div class='attr-table'>
+            <div># Protected areas: ${total.pa_count}</div>
+            <div>Protected acreage: ${formatNumber(total.pa_acres)}</div>
+            <div>Avg. PA acreage: ${formatNumber(total.pa_mean)}</div>
+            <div>County acreage: ${formatNumber(total.county_acres)}</div>
+            <div>County Protected area: ${parseInt(percent)}%</div>
+            <div class="gap-status-head">GAP Status Staticistics</div>`;
+        gap_status.forEach((data) => {
+            html += `<div>GAP ${data.gap_sts}</div>
+            <div>Total features: ${formatNumber(data.total)}</div>
+            <div>Total acreage: ${formatNumber(data.acres)}</div>
+        `;
+        });
+        html += '</div>';
     }
     document.getElementById('popup-content').innerHTML = html;
 }
@@ -556,6 +564,8 @@ $(document).ready(function() {
 
 
 function formatNumber(num) {
+    if (typeof num  === 'undefined') return 'N/A';
+
     return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
 }
 

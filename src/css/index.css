@@ -144,6 +144,7 @@ html, body {
     padding: 10px;
     color: white;
     background-color: green;
+    font-weight: bold;
 }
 
 #popup-content {
@@ -155,11 +156,18 @@ html, body {
     border-bottom: 1px solid lightgray;
     border-left: 1px solid lightgray;
     /* margin: 10px 0px; */
+    font-size: 0.8em;
 }
 
 #popup-content .attr-table div {
     border-top: 1px solid lightgray;
     padding: 3px 6px;
+}
+
+#popup-content .gap-status-head {
+    background: #4ebd57;
+    color: white;
+    font-weight: bold;
 }
 
 #info {
