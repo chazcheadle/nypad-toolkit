@@ -179,7 +179,7 @@ form {
 }
 
 #type {
-    display: none;
+    /* display: none; */
 }
 
 input[name='style-filter'] {

@@ -70,22 +70,37 @@ var userVectorLayer = new ol.layer.Vector({
                 color: '#ffcc33'
             })
         })
-    })
+    }),
+    geometryName: 'geometry'
 });
+// Add layer switcher control.
+var layerSwitcher2 = new ol.control.LayerSwitcher();
+map.addControl(layerSwitcher2)
+
+
 // var modify = new ol.interaction.Modify({ source: userSource });
 // map.addInteraction(modify);
 
-userSource.on('addfeature', function(feature) {
-    console.log(feature);
-})
+userSource.on('addfeature', function(event) {
+    console.log(event.feature);
+    var writer = new ol.format.GeoJSON();
+    var geojsonStr = writer.writeFeatures(userSource.getFeatures());
+    console.log(JSON.parse(geojsonStr));
+    console.log('Attempt insert');
+    transactWFS('insert', event.feature);
+});
 
 
-var layerSwitcher2 = new ol.control.LayerSwitcher();
-map.addControl(layerSwitcher2);
+var saveButton = document.getElementById('save-edits');
+saveButton.onclick = function() {
+        console.log(userSource.getFeatures());
+        var writer = new ol.format.GeoJSON();
+        var geojsonStr = writer.writeFeatures(userSource.getFeatures());
+        console.log(geojsonStr);
+}
 
 var draw, snap; // global so we can remove them later
 var typeSelect = document.getElementById('type');
-
 
 // var selectFeat = new ol.interaction.Select();
 // map.addInteraction(selectFeat);
@@ -107,14 +122,15 @@ function addInteractions() {
     }
     else {
         draw = new ol.interaction.Draw({
-            source: source,
+            source: userSource,
             type: typeSelect.value
         });
         map.addInteraction(draw);
-        snap = new ol.interaction.Snap({ source: source });
+        snap = new ol.interaction.Snap({ source: userSource });
         map.addInteraction(snap);
     }
 }
+addInteractions();
 
 /**
  * Handle change event.
@@ -125,7 +141,19 @@ typeSelect.onchange = function () {
     addInteractions();
 };
 
-addInteractions();
+
+// draw.on('drawend', function(event) {
+//     console.log('DRAW END');
+//     console.log(event.feature);
+//     // var writer = new ol.format.GeoJSON();
+//     // var geojsonStr = writer.writeFeatures(source.getFeatures());
+//     // console.log(JSON.parse(geojsonStr));
+//     // transactWFS('insert', event.feature);
+// });
+
+
+
+
 
 // Load Counties Shoreline layer (WMS)
 var countiesLayer = new ol.layer.Image({
@@ -603,40 +631,50 @@ function formatNumber(num) {
 //     transactWFS('insert', event.feature);
 // });
 
-// var formatWFS = new ol.format.WFS();
+var formatWFS = new ol.format.WFS();
 
-// var formatGML = new ol.format.GML({
-//     featureNS: '',
-//     featureType: 'the_geom',
-//     srsName: 'EPSG:3857'    
-// });
-// var xs = new XMLSerializer();
-// function transactWFS(mode, f) {
-//     console.log('transactWFS()');
-//     var node;
-//         switch (mode) {
-//             case 'insert':
-//                 node = formatWFS.writeTransaction([f], null, null, formatGML);
-//                 break;
-//             case 'update':
-//                 node = formatWFS.writeTransaction(null, [f], null, formatGML);
-//                 break;
-//             case 'delete':
-//                 node = formatWFS.writeTransaction(null, null, [f], formatGML);
-//                 break;
-//         }
-//         var payload = xs.serializeToString(node);
-//         console.log(payload);
-//         $.ajax('', {
-//             type: 'POST',
-//             dataType: 'xml',
-//             processData: false,
-//             contentType: 'text/xml',
-//             data: payload
-//         }).done(function() {
-//             // source.clear();
-//         });
-// }
+var formatGML = new ol.format.GML({
+    featureNS: 'http://molamola.us:8081/geoserver/nypad_postgres',
+    featureType: 'user_edits',
+    geometryName: "geometry",
+    srsName: 'EPSG:3857'    
+});
+var xs = new XMLSerializer();
+function transactWFS(mode, f) {
+    console.log(`transactWFS() = ${mode}`);
+    var node;
+        switch (mode) {
+            case 'insert':
+                node = formatWFS.writeTransaction([f], null, null, formatGML);
+                break;
+            case 'update':
+                node = formatWFS.writeTransaction(null, [f], null, formatGML);
+                break;
+            case 'delete':
+                node = formatWFS.writeTransaction(null, null, [f], formatGML);
+                break;
+        }
+        console.log(node);
+        var payload = xs.serializeToString(node);
+        console.log(payload);
+        $.ajax('http://molamola.us:8081/geoserver/wfs', {
+            service: 'WFS',
+            type: 'POST',
+            dataType: 'xml',
+            processData: false,
+            contentType: 'text/xml',
+            version: '1.1.0',
+            data: payload
+        })
+        .error((e) => {
+            console.log(e);
+        })
+        .done(function() {
+            // Refreshing the layer.
+            console.log('Reload userSource');
+            userSource.clear();
+        });
+}
 
 //// WIP: Vector feature buffer tool
 // var vectorSource = new ol.source.Vector({
