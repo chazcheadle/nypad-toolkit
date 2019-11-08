@@ -1,6 +1,6 @@
 
 const bingMapsApiKey = 'AnFPaMaxN1xpYPU07vmKY0Ejl89tpzRIVdXsfQc2i_0mgFCiscaVpVtZzeR1Uqvn';
-const url = 'http://molamola.us:8081/geoserver/nypad_postgres/wms?';
+const url = 'http://molamola.us:8081/geoserver/nypad/wms?';
 
 var bingStyles = [
     'RoadOnDemand',
@@ -123,7 +123,8 @@ function addInteractions() {
     else {
         draw = new ol.interaction.Draw({
             source: userSource,
-            type: typeSelect.value
+            type: typeSelect.value,
+            geometryName: 'wkb_geometry'
         });
         map.addInteraction(draw);
         snap = new ol.interaction.Snap({ source: userSource });
@@ -160,7 +161,7 @@ var countiesLayer = new ol.layer.Image({
     source: new ol.source.ImageWMS({
         url: url,
         params: {
-            'LAYERS': 'nypad_postgres:counties_shoreline',
+            'LAYERS': 'nypad:counties_shoreline',
         },
         serverType: 'geoserver'
     })
@@ -230,10 +231,10 @@ var featureSelectedStyle = new ol.style.Style({
 var countyVectorSource = new ol.source.Vector({
     format: new ol.format.GeoJSON(),
     url: function (extent) {
-        return 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
+        return 'http://molamola.us:8081/geoserver/nypad/wfs?service=WFS&' +
             'version=1.1.0' +
             '&request=GetFeature' +
-            '&typename=' + 'nypad_postgres:counties_shoreline' +
+            '&typename=' + 'nypad:counties_shoreline' +
             '&outputFormat=application/json' +
             '&maxFeatures=100' +
             '&srsname=EPSG:3857&,EPSG:3857';
@@ -292,7 +293,7 @@ var townsLayer = new ol.layer.Image({
     source: new ol.source.ImageWMS({
         url: url,
         params: {
-            'LAYERS': 'nypad_postgres:cities_towns',
+            'LAYERS': 'nypad:cities_towns',
             'CQL_FILTER': cqlFilter || null,
         },
         serverType: 'geoserver'
@@ -305,7 +306,7 @@ var nypadLayer = new ol.layer.Image({
     source: new ol.source.ImageWMS({
         url: url,
         params: {
-            'LAYERS': 'nypad_postgres:nypad_2017',
+            'LAYERS': 'nypad:nypad_2017',
             'CQL_FILTER': cqlFilter || null,
             'STYLES': 'nypad_gap_codes'
         },
@@ -400,12 +401,12 @@ map.on('singleclick', function (evt) {
                     // Set WMS request parameters for the chosen layer type.
                     if (selectLayer === 'protectedArea') {
                         cqlFilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
-                        layerName = 'nypad_postgres:nypad_2017';
+                        layerName = 'nypad:nypad_2017';
                         populatePopup(selectLayer, feature);
                     }
                     else {
                         cqlFilter = 'abbreviation = \'' + feature.features[0].properties.abbreviation + '\'';
-                        layerName = 'nypad_postgres:counties_shoreline';
+                        layerName = 'nypad:counties_shoreline';
                         fetch(`/county_data?q=${feature.features[0].properties.abbreviation}`)
                             .then((response) => {
                                 return response.text();
@@ -416,7 +417,7 @@ map.on('singleclick', function (evt) {
                     }
 
                     // Load selected feature as a vector.
-                    let featureUrl = 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
+                    let featureUrl = 'http://molamola.us:8081/geoserver/nypad/wfs?service=WFS&' +
                         'version=1.1.0' +
                         '&request=GetFeature' +
                         '&typename=' + layerName +
@@ -541,7 +542,7 @@ function searchByArea(reset) {
         cqlFilter = null;
     }
     nypadLayer.getSource().updateParams({
-        'LAYERS': 'nypad_postgis:nypad_2017',
+        'LAYERS': 'nypad:nypad_2017',
         'CQL_FILTER': cqlFilter
     });
 }
@@ -550,7 +551,7 @@ function searchByArea(reset) {
 function searchByGapStatus(status) {
     cqlFilter = status ? `gap_sts = '${status}'` : null;
     nypadLayer.getSource().updateParams({
-        'LAYERS': 'nypad_postgis:nypad_2017',
+        'LAYERS': 'nypad:nypad_2017',
         'CQL_FILTER': cqlFilter
     });
 }
@@ -559,7 +560,7 @@ function searchByGapStatus(status) {
 function getLocalNameSearchResults(name) {
     cqlFilter = name ? `loc_nm = '${name}'` : null;
     nypadLayer.getSource().updateParams({
-        'LAYERS': 'nypad_postgis:nypad_2017',
+        'LAYERS': 'nypad:nypad_2017',
         'CQL_FILTER': cqlFilter
     });
 }
@@ -579,11 +580,11 @@ function searchByCQLFilter() {
     const query = document.getElementById('cql-filter-query').value;
     cqlFilter = query ? query : null;
     nypadLayer.getSource().updateParams({
-        'LAYERS': 'nypad_postgis:nypad_2017',
+        'LAYERS': 'nypad:nypad_2017',
         'CQL_FILTER': cqlFilter
     });
 }
-// DWITHIN(wkb_geometry, collectGeometries(queryCollection('nypad_postgres:nypad_2017','wkb_geometry','nypad_id = ''NYPAD-40507''')), 5000, meters)
+// DWITHIN(wkb_geometry, collectGeometries(queryCollection('nypad:nypad_2017','wkb_geometry','nypad_id = ''NYPAD-40507''')), 5000, meters)
 // Close info window
 var closer = document.getElementById('popup-closer');
 closer.onclick = function() {
@@ -634,7 +635,7 @@ function formatNumber(num) {
 var formatWFS = new ol.format.WFS();
 
 var formatGML = new ol.format.GML({
-    featureNS: 'http://molamola.us:8081/geoserver/nypad_postgres',
+    featureNS: 'http://molamola.us:8081/geoserver/nypad',
     featureType: 'user_edits',
     geometryName: "geometry",
     srsName: 'EPSG:3857'    
@@ -681,7 +682,7 @@ function transactWFS(mode, f) {
 // fetch('' +
 //     'version=1.1.0' +
 //     '&request=GetFeature' +
-//     '&typename=nypad_postgres:nypad_2017&' +
+//     '&typename=nypad:nypad_2017&' +
 //     'CQL_FILTER=' + cqlfilter + '&' +
 //     'outputFormat=application/json&' +
 //     'maxFeatures=50&' +
@@ -726,10 +727,10 @@ function transactWFS(mode, f) {
 // var citiesVectorSource = new ol.source.Vector({
 //     format: new ol.format.GeoJSON(),
 //     url: function (extent) {
-//         return 'http://molamola.us:8081/geoserver/nypad_postgres/wfs?service=WFS&' +
+//         return 'http://molamola.us:8081/geoserver/nypad/wfs?service=WFS&' +
 //             'version=1.1.0' +
 //             '&request=GetFeature' +
-//             '&typename=' + 'nypad_postgres:cities_towns' +
+//             '&typename=' + 'nypad:cities_towns' +
 //             '&outputFormat=application/json' +
 //             // '&maxFeatures=100' +
 //             '&srsname=EPSG:3857&,EPSG:3857';
