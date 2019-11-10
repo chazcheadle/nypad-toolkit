@@ -6,6 +6,7 @@ import responseTime from 'response-time';
 
 import { autocomplete } from './modules/autocomplete/autocomplete';
 import { countyDataEndpoint } from './modules/countyData/countyData';
+import { transaction } from './modules/transaction/transaction';
 
 require("dotenv").config();
 
@@ -19,6 +20,7 @@ const app = express();
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 app.use(responseTime())
 
@@ -39,6 +41,11 @@ app.get('/autocomplete', (req, res) => {
 // Retrieve NYPAD data for a county
 app.get('/county_data', (req, res) => {
     countyDataEndpoint(req, res);
+});
+
+// Handle transactions.
+app.post('/transaction', (req, res) => {
+    transaction(req, res);
 });
 
 app.listen(port, function () {

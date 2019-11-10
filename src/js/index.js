@@ -81,14 +81,14 @@ map.addControl(layerSwitcher2)
 // var modify = new ol.interaction.Modify({ source: userSource });
 // map.addInteraction(modify);
 
-userSource.on('addfeature', function(event) {
-    console.log(event.feature);
-    var writer = new ol.format.GeoJSON();
-    var geojsonStr = writer.writeFeatures(userSource.getFeatures());
-    console.log(JSON.parse(geojsonStr));
-    console.log('Attempt insert');
-    transactWFS('insert', event.feature);
-});
+// userSource.on('addfeature', function(event) {
+//     console.log(event.feature);
+//     var writer = new ol.format.GeoJSON();
+//     var geojsonStr = writer.writeFeatures(userSource.getFeatures());
+//     console.log(JSON.parse(geojsonStr));
+//     console.log('Attempt insert');
+//     transactWFS('insert', event.feature);
+// });
 
 
 var saveButton = document.getElementById('save-edits');
@@ -143,14 +143,17 @@ typeSelect.onchange = function () {
 };
 
 
-// draw.on('drawend', function(event) {
-//     console.log('DRAW END');
-//     console.log(event.feature);
-//     // var writer = new ol.format.GeoJSON();
-//     // var geojsonStr = writer.writeFeatures(source.getFeatures());
-//     // console.log(JSON.parse(geojsonStr));
-//     // transactWFS('insert', event.feature);
-// });
+draw.on('drawend', function(event) {
+    console.log('DRAW END');
+    console.log(event.feature);
+    var format = new ol.format.WKT(),
+    wkt = format.writeGeometry(event.feature.getGeometry());
+    console.log(wkt);
+    // var writer = new ol.format.GeoJSON();
+    // var geojsonStr = writer.writeFeatures(source.getFeatures());
+    // console.log(JSON.parse(geojsonStr));
+    // transactWFS('insert', event.feature);
+});
 
 
 
