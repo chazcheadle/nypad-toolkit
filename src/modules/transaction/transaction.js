@@ -40,25 +40,24 @@ const insertFeature = (data) => {
         feature = '',
         name,
     } = data;
-
+    console.log('in insert');
     return db('user_edits')
         .insert({
             name,
-            wkb_geometry: st.setSRID(st.geomFromText(feature), 26918)
+            geometry: st.setSRID(st.geomFromText(feature), 26918)
         })
         .then((result) => {
             console.log(result);
             return result;
         })
         .catch((e) => {
-            console.log('EEEEEEEEE');
+            console.log('TRANSACTION ERROR');
             console.log(e);
-            res.status(500);
         });
 }
 
 
-const transaction = async(req, res) => {
+const transaction = (req, res) => {
     const {
         action,
         description = '',
@@ -69,14 +68,18 @@ const transaction = async(req, res) => {
     let result;
     switch (action) {
         case 'insert': {
-            result = await insertFeature(req.body);
+           insertFeature(req.body)
+               .then(() => {
+                   console.log('INSERTED');
+                    res.send('Inserted')
+                });
+            break;
         }
         default:
+            break;
 
     }
-    console.log('###########');
-    console.log(result);
-    res.send('OK');
+    // res.send('OK');
 }
 
 export { transaction }

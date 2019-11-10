@@ -53,7 +53,18 @@ var map = new ol.Map({
 });
 
 // Create a blank vector layer to draw on.
-var userSource = new ol.source.Vector();
+var userSource = new ol.source.Vector({
+    format: new ol.format.GeoJSON(),
+    url: function (extent) {
+        return 'http://molamola.us:8081/geoserver/nypad/wfs?service=WFS&' +
+            'version=1.1.0' +
+            '&request=GetFeature' +
+            '&typename=' + 'nypad:user_edits' +
+            '&outputFormat=application/json' +
+            '&srsname=EPSG:26918&,EPSG:26918';
+    },
+    strategy: ol.loadingstrategy.bbox,
+});
 var userVectorLayer = new ol.layer.Vector({
     source: userSource,
     style: new ol.style.Style({
@@ -61,8 +72,8 @@ var userVectorLayer = new ol.layer.Vector({
             color: 'rgba(255, 255, 255, 0.2)'
         }),
         stroke: new ol.style.Stroke({
-            color: '#ffcc33',
-            width: 2
+            color: '#0000FF',
+            width: 0.5
         }),
         image: new ol.style.Circle({
             radius: 7,
@@ -124,7 +135,7 @@ function addInteractions() {
         draw = new ol.interaction.Draw({
             source: userSource,
             type: typeSelect.value,
-            geometryName: 'wkb_geometry'
+            geometryName: 'geometry'
         });
         map.addInteraction(draw);
         snap = new ol.interaction.Snap({ source: userSource });
@@ -142,19 +153,32 @@ typeSelect.onchange = function () {
     addInteractions();
 };
 
-
-draw.on('drawend', function(event) {
-    console.log('DRAW END');
-    console.log(event.feature);
-    var format = new ol.format.WKT(),
-    wkt = format.writeGeometry(event.feature.getGeometry());
-    console.log(wkt);
-    // var writer = new ol.format.GeoJSON();
-    // var geojsonStr = writer.writeFeatures(source.getFeatures());
-    // console.log(JSON.parse(geojsonStr));
-    // transactWFS('insert', event.feature);
-});
-
+    draw.on('drawend', function(event) {
+        console.log('DRAW END');
+        console.log(event.feature);
+        var format = new ol.format.WKT();
+        const geometry = format.writeGeometry(event.feature.getGeometry());
+        console.log(geometry);
+        $.ajax({
+            method: 'POST',
+            url: 'http://molamola.us:1234/transaction',
+            contentType: 'application/x-www-form-urlencoded',
+            data: {action: 'insert', name: 'TEST', description: 'DESCRIPTION', feature: geometry}
+        })
+        .error((e) => {
+            console.log('EEEEEEEEEE');
+            console.log(e);
+        })
+        .done(function() {
+            // Refreshing the layer.
+            console.log('Reload userSource');
+            userSource.clear();
+        });
+        // var writer = new ol.format.GeoJSON();
+        // var geojsonStr = writer.writeFeatures(source.getFeatures());
+        // console.log(JSON.parse(geojsonStr));
+        // transactWFS('insert', event.feature);
+    });
 
 
 
