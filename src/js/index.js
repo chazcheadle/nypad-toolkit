@@ -53,7 +53,7 @@ var map = new ol.Map({
 });
 
 // Create a blank vector layer to draw on.
-var userSource = new ol.source.Vector({
+var userEditsSource = new ol.source.Vector({
     format: new ol.format.GeoJSON(),
     url: function (extent) {
         return 'http://molamola.us:8081/geoserver/nypad/wfs?service=WFS&' +
@@ -65,8 +65,8 @@ var userSource = new ol.source.Vector({
     },
     strategy: ol.loadingstrategy.bbox,
 });
-var userVectorLayer = new ol.layer.Vector({
-    source: userSource,
+var userEditsLayer = new ol.layer.Vector({
+    source: userEditsSource,
     style: new ol.style.Style({
         fill: new ol.style.Fill({
             color: 'rgba(255, 255, 255, 0.2)'
@@ -89,13 +89,13 @@ var layerSwitcher2 = new ol.control.LayerSwitcher();
 map.addControl(layerSwitcher2)
 
 
-// var modify = new ol.interaction.Modify({ source: userSource });
+// var modify = new ol.interaction.Modify({ source: userEditsSource });
 // map.addInteraction(modify);
 
-// userSource.on('addfeature', function(event) {
+// userEditsSource.on('addfeature', function(event) {
 //     console.log(event.feature);
 //     var writer = new ol.format.GeoJSON();
-//     var geojsonStr = writer.writeFeatures(userSource.getFeatures());
+//     var geojsonStr = writer.writeFeatures(userEditsSource.getFeatures());
 //     console.log(JSON.parse(geojsonStr));
 //     console.log('Attempt insert');
 //     transactWFS('insert', event.feature);
@@ -104,14 +104,23 @@ map.addControl(layerSwitcher2)
 
 var saveButton = document.getElementById('save-edits');
 saveButton.onclick = function() {
-        console.log(userSource.getFeatures());
+        console.log(userEditsSource.getFeatures());
         var writer = new ol.format.GeoJSON();
-        var geojsonStr = writer.writeFeatures(userSource.getFeatures());
+        var geojsonStr = writer.writeFeatures(userEditsSource.getFeatures());
         console.log(geojsonStr);
 }
 
 var draw, snap; // global so we can remove them later
+
+/**
+ * Handle change event.
+ */
 var typeSelect = document.getElementById('type');
+typeSelect.onchange = function () {
+    map.removeInteraction(draw);
+    map.removeInteraction(snap);
+    addInteractions();
+};
 
 // var selectFeat = new ol.interaction.Select();
 // map.addInteraction(selectFeat);
@@ -133,52 +142,45 @@ function addInteractions() {
     }
     else {
         draw = new ol.interaction.Draw({
-            source: userSource,
+            source: userEditsSource,
             type: typeSelect.value,
             geometryName: 'geometry'
         });
         map.addInteraction(draw);
-        snap = new ol.interaction.Snap({ source: userSource });
+        snap = new ol.interaction.Snap({ source: userEditsSource });
         map.addInteraction(snap);
     }
 }
 addInteractions();
 
-/**
- * Handle change event.
- */
-typeSelect.onchange = function () {
-    map.removeInteraction(draw);
-    map.removeInteraction(snap);
-    addInteractions();
-};
-
-    draw.on('drawend', function(event) {
-        console.log('DRAW END');
-        console.log(event.feature);
-        var format = new ol.format.WKT();
-        const geometry = format.writeGeometry(event.feature.getGeometry());
-        console.log(geometry);
-        $.ajax({
-            method: 'POST',
-            url: 'http://molamola.us:1234/transaction',
-            contentType: 'application/x-www-form-urlencoded',
-            data: {action: 'insert', name: 'TEST', description: 'DESCRIPTION', feature: geometry}
-        })
-        .error((e) => {
-            console.log('EEEEEEEEEE');
-            console.log(e);
-        })
-        .done(function() {
-            // Refreshing the layer.
-            console.log('Reload userSource');
-            userSource.clear();
-        });
-        // var writer = new ol.format.GeoJSON();
-        // var geojsonStr = writer.writeFeatures(source.getFeatures());
-        // console.log(JSON.parse(geojsonStr));
-        // transactWFS('insert', event.feature);
+// Save drawn features to the database.
+draw.on('drawend', function(event) {
+    // Convert OL feature object into WKT format.
+    var format = new ol.format.WKT();
+    const geometry = format.writeGeometry(event.feature.getGeometry());
+    // TODO: Get feature details from user.
+    let name = 'TEST';
+    let description = 'Description';
+    $.ajax({
+        method: 'POST',
+        url: 'http://molamola.us:1234/transaction',
+        contentType: 'application/x-www-form-urlencoded',
+        data: {
+            action: 'insert',
+            name: `${name}`,
+            description: `${description}`,
+            feature: geometry,
+        }
+    })
+    .error((e) => {
+        console.log('EEEEEEEEEE');
+        console.log(e);
+    })
+    .done(function() {
+        // Refresh the source. to show the DB served data.
+        userEditsSource.clear();
     });
+});
 
 
 
@@ -344,8 +346,6 @@ nypadLayer.setOpacity(0.8);
 
 
 var vectorSource = new ol.source.Vector({});
-
-
 var vectorLayer = new ol.layer.Vector({
     source: null
 });
@@ -355,11 +355,11 @@ var vectorLayer = new ol.layer.Vector({
 //     map.zoomToExtent(vectorLayer.getDataExtent())
 // });
 
-map.addLayer(userVectorLayer);
 map.addLayer(nypadLayer);
 map.addLayer(townsLayer);
 map.addLayer(countiesLayer);
 map.addLayer(countyVectorLayer);
+map.addLayer(userEditsLayer);
 map.addLayer(vectorLayer);
 
 var selected = null;
@@ -659,50 +659,50 @@ function formatNumber(num) {
 //     transactWFS('insert', event.feature);
 // });
 
-var formatWFS = new ol.format.WFS();
+// var formatWFS = new ol.format.WFS();
 
-var formatGML = new ol.format.GML({
-    featureNS: 'http://molamola.us:8081/geoserver/nypad',
-    featureType: 'user_edits',
-    geometryName: "geometry",
-    srsName: 'EPSG:3857'    
-});
-var xs = new XMLSerializer();
-function transactWFS(mode, f) {
-    console.log(`transactWFS() = ${mode}`);
-    var node;
-        switch (mode) {
-            case 'insert':
-                node = formatWFS.writeTransaction([f], null, null, formatGML);
-                break;
-            case 'update':
-                node = formatWFS.writeTransaction(null, [f], null, formatGML);
-                break;
-            case 'delete':
-                node = formatWFS.writeTransaction(null, null, [f], formatGML);
-                break;
-        }
-        console.log(node);
-        var payload = xs.serializeToString(node);
-        console.log(payload);
-        $.ajax('http://molamola.us:8081/geoserver/wfs', {
-            service: 'WFS',
-            type: 'POST',
-            dataType: 'xml',
-            processData: false,
-            contentType: 'text/xml',
-            version: '1.1.0',
-            data: payload
-        })
-        .error((e) => {
-            console.log(e);
-        })
-        .done(function() {
-            // Refreshing the layer.
-            console.log('Reload userSource');
-            userSource.clear();
-        });
-}
+// var formatGML = new ol.format.GML({
+//     featureNS: 'http://molamola.us:8081/geoserver/nypad',
+//     featureType: 'user_edits',
+//     geometryName: "geometry",
+//     srsName: 'EPSG:3857'    
+// });
+// var xs = new XMLSerializer();
+// function transactWFS(mode, f) {
+//     console.log(`transactWFS() = ${mode}`);
+//     var node;
+//         switch (mode) {
+//             case 'insert':
+//                 node = formatWFS.writeTransaction([f], null, null, formatGML);
+//                 break;
+//             case 'update':
+//                 node = formatWFS.writeTransaction(null, [f], null, formatGML);
+//                 break;
+//             case 'delete':
+//                 node = formatWFS.writeTransaction(null, null, [f], formatGML);
+//                 break;
+//         }
+//         console.log(node);
+//         var payload = xs.serializeToString(node);
+//         console.log(payload);
+//         $.ajax('http://molamola.us:8081/geoserver/wfs', {
+//             service: 'WFS',
+//             type: 'POST',
+//             dataType: 'xml',
+//             processData: false,
+//             contentType: 'text/xml',
+//             version: '1.1.0',
+//             data: payload
+//         })
+//         .error((e) => {
+//             console.log(e);
+//         })
+//         .done(function() {
+//             // Refreshing the layer.
+//             console.log('Reload userEditsSource');
+//             userEditsSource.clear();
+//         });
+// }
 
 //// WIP: Vector feature buffer tool
 // var vectorSource = new ol.source.Vector({
