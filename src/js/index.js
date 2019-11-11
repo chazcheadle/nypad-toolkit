@@ -161,6 +161,7 @@ draw.on('drawend', function(event) {
     // TODO: Get feature details from user.
     let name = 'TEST';
     let description = 'Description';
+    console.log(geometry);
     $.ajax({
         method: 'POST',
         url: 'http://molamola.us:1234/transaction',
