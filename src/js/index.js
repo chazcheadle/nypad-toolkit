@@ -51,6 +51,11 @@ var map = new ol.Map({
         zoom: 7
     })
 });
+// Add layer switcher control.
+var layerSwitcher2 = new ol.control.LayerSwitcher();
+map.addControl(layerSwitcher2)
+
+
 
 // Create a blank vector layer to draw on.
 var userEditsSource = new ol.source.Vector({
@@ -84,9 +89,6 @@ var userEditsLayer = new ol.layer.Vector({
     }),
     geometryName: 'geometry'
 });
-// Add layer switcher control.
-var layerSwitcher2 = new ol.control.LayerSwitcher();
-map.addControl(layerSwitcher2)
 
 
 // var modify = new ol.interaction.Modify({ source: userEditsSource });
@@ -121,10 +123,6 @@ typeSelect.onchange = function () {
     map.removeInteraction(snap);
     addInteractions();
 };
-
-// var selectFeat = new ol.interaction.Select();
-// map.addInteraction(selectFeat);
-// var selectedFeat = selectFeat.getFeatures();
 
 function addInteractions() {
     if (typeSelect.value === 'Navigate') {
@@ -197,9 +195,6 @@ var countiesLayer = new ol.layer.Image({
     })
 })
 countiesLayer.setOpacity(0.8);
-
-
-
 // Load Counties Shoreline vector layer (WFS)
 const countyStyle = new ol.style.Style({
     fill: new ol.style.Fill({
@@ -485,18 +480,20 @@ map.on('singleclick', function (evt) {
                     // vectorSource.once('change', (event) => {
                     //     map.getView().fit(vectorLayer.getSource().getExtent(), (map.getSize()));
                     // })
+                    
+                    // Zoom in to a reasonable level, but do not zoom out if the user has already zoomed in manually.
+                    if (typeSelect.value === 'Navigate' && selectLayer !== 'county') {
+                        view.animate({
+                            center: evt.coordinate,
+                            duration: 1000,
+                            zoom: map.getView().getZoom() > 7 ? map.getView().getZoom() : 10
+                        })
+                    }
                 }
             });
     }
 
-    // Zoom in to a resonable level, but do not zoom out if the user has already zoomed in manually.
-    if (typeSelect.value === 'Navigate' && selectLayer !== 'county') {
-        view.animate({
-            center: evt.coordinate,
-            duration: 1000,
-            zoom: map.getView().getZoom() > 7 ? map.getView().getZoom() : 10
-        })
-    }
+
 });
 
 // List features on user drawing layer
