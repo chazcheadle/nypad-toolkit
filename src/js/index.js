@@ -123,10 +123,11 @@ function addInteractions() {
         map.addInteraction(selectFeat);
         console.log('selected');
         var selectedFeat = selectFeat.getFeatures();
-        var modifyFeat = new ol.interaction.Modify({
-            features: selectedFeat
-        });
-        map.addInteraction(modifyFeat);
+        console.log(selectedFeat);  
+        // var modifyFeat = new ol.interaction.Modify({
+        //     features: selectedFeat
+        // });
+        // map.addInteraction(modifyFeat);
     }
     else {
         draw = new ol.interaction.Draw({
@@ -143,30 +144,25 @@ function addInteractions() {
             const geometry = format.writeGeometry(event.feature.getGeometry());
 
             content.innerHTML = `
-            <input type='text' size='40' id='user-edit-name' placeholder='Enter a name for this feature'></input>
-            <textarea cols='40' rows='4' id='user-edit-description' placeholder='Enter a description'></textarea>
-            <input type="hidden" id='user-edit-geometry' value="${geometry}">
-            <div>
-                <input type='button' onclick='saveUserEdit();' value='Save'>
-                <input type='button' onclick='popupCloser.click()' value='Cancel'>
-            </div>`;
+                <input type='text' size='40' id='user-edit-name' placeholder='Enter a name for this feature'></input>
+                <textarea cols='40' rows='4' id='user-edit-description' placeholder='Enter a description'></textarea>
+                <input type="hidden" id='user-edit-geometry' value="${geometry}">
+                <div>
+                    <input type='button' onclick='saveUserEdit();' value='Save'>
+                    <input type='button' onclick='popupCloser.click()' value='Cancel'>
+                </div>`;
             if (!overlay.getPosition()) {
                 overlay.setPosition(event.feature.getGeometry().getLastCoordinate());
             }
-
-            // saveUserEdit({name, description, geometry});
-
-
         });
 
-
-        snap = new ol.interaction.Snap({ source: userEditsSource });
-        map.addInteraction(snap);
+        // snap = new ol.interaction.Snap({ source: userEditsSource });
+        // map.addInteraction(snap);
     }
 }
 addInteractions();
 
-
+// Save user added feature.
 const saveUserEdit = () => {
 
     const name = document.getElementById('user-edit-name').value;
@@ -174,7 +170,6 @@ const saveUserEdit = () => {
     const geometry = document.getElementById('user-edit-geometry').value;
 
     if (name) {
-
         $.ajax({
             method: 'POST',
             url: '/transaction',
@@ -383,111 +378,133 @@ map.on('pointermove', function(e) {
 map.on('singleclick', function (evt) {
 
     var view = map.getView();
+    var features = [];
+    map.forEachFeatureAtPixel(evt.pixel, function(feature, layer) {
+        features.push(feature);
+    });
+    if (features.length > 0 && features[0].get('type') === 'user_edit') {
+        const {
+            name,
+            description,
+        } = features[0].getProperties();
 
-    // Pick the feature layer to select
-    let layerUrl = '';
-    let selectLayer = '';
-    let cqlFilter = '';
-    let layerName = '';
-    selectionLayerChoice = document.getElementsByName('selection-layer-filter');
-    for (let i = 0; i < selectionLayerChoice.length; i++) { 
-        if (selectionLayerChoice[i].checked) {
-            selectLayer = selectionLayerChoice[i].value;
+        content.innerHTML = `
+            <div>${name}</div>
+            <div>${description}</div>
+            <div>
+                <input type='button' onclick='popupCloser.click()' value='Close'>
+            </div>`;
+        if (!overlay.getPosition()) {
+            overlay.setPosition(evt.coordinate);
         }
+
     }
-    switch (selectLayer) {
-        case 'county':
-            layerUrl = countiesLayer.getSource().getGetFeatureInfoUrl(
-                evt.coordinate, view.getResolution(), view.getProjection(),
-                { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
-            break;
-        case 'protectedArea':
-        default:
-            layerUrl = nypadLayer.getSource().getGetFeatureInfoUrl(
-                evt.coordinate, view.getResolution(), view.getProjection(),
-                { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
-            break;
-    }
+    else {
+        // Pick the feature layer to select
+        let layerUrl = '';
+        let selectLayer = '';
+        let cqlFilter = '';
+        let layerName = '';
+        selectionLayerChoice = document.getElementsByName('selection-layer-filter');
+        for (let i = 0; i < selectionLayerChoice.length; i++) { 
+            if (selectionLayerChoice[i].checked) {
+                selectLayer = selectionLayerChoice[i].value;
+            }
+        }
+        switch (selectLayer) {
+            case 'county':
+                layerUrl = countiesLayer.getSource().getGetFeatureInfoUrl(
+                    evt.coordinate, view.getResolution(), view.getProjection(),
+                    { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
+                break;
+            case 'protectedArea':
+            default:
+                layerUrl = nypadLayer.getSource().getGetFeatureInfoUrl(
+                    evt.coordinate, view.getResolution(), view.getProjection(),
+                    { 'INFO_FORMAT': 'application/json', 'FEATURE_COUNT': 50 });
+                break;
+        }
 
-    // Get feature information for clicked WMS layer.
-    if (layerUrl) {
-        fetch(layerUrl)
-            .then((response) => {
-                return response.text();
-            })
-            .then((text) => {
-                var feature = JSON.parse(text)
-                if (feature && feature.features.length) {
-                    // Set WMS request parameters for the chosen layer type.
-                    if (selectLayer === 'protectedArea') {
-                        cqlFilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
-                        layerName = 'nypad:nypad_2017';
-                        populateInfoWindow(selectLayer, feature);
-                    }
-                    else {
-                        cqlFilter = 'abbreviation = \'' + feature.features[0].properties.abbreviation + '\'';
-                        layerName = 'nypad:counties_shoreline';
-                        fetch(`/county_data?q=${feature.features[0].properties.abbreviation}`)
-                            .then((response) => {
-                                return response.text();
-                            })
-                            .then((data) => {
-                                populateInfoWindow(selectLayer, JSON.parse(data));
-                            });
-                    }
+        // Get feature information for clicked WMS layer.
+        if (layerUrl) {
+            fetch(layerUrl)
+                .then((response) => {
+                    return response.text();
+                })
+                .then((text) => {
+                    var feature = JSON.parse(text)
+                    if (feature && feature.features.length) {
+                        // Set WMS request parameters for the chosen layer type.
+                        if (selectLayer === 'protectedArea') {
+                            cqlFilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
+                            layerName = 'nypad:nypad_2017';
+                            populateInfoWindow(selectLayer, feature);
+                        }
+                        else {
+                            cqlFilter = 'abbreviation = \'' + feature.features[0].properties.abbreviation + '\'';
+                            layerName = 'nypad:counties_shoreline';
+                            fetch(`/county_data?q=${feature.features[0].properties.abbreviation}`)
+                                .then((response) => {
+                                    return response.text();
+                                })
+                                .then((data) => {
+                                    populateInfoWindow(selectLayer, JSON.parse(data));
+                                });
+                        }
 
-                    // Load selected feature as a vector.
-                    let featureUrl = 'http://molamola.us:8081/geoserver/nypad/wfs?service=WFS&' +
-                        'version=1.1.0' +
-                        '&request=GetFeature' +
-                        '&typename=' + layerName +
-                        '&CQL_FILTER=' + cqlFilter +
-                        '&outputFormat=application/json' +
-                        '&maxFeatures=50' +
-                        '&srsname=EPSG:3857&,EPSG:3857';
+                        // Load selected feature as a vector.
+                        let featureUrl = 'http://molamola.us:8081/geoserver/nypad/wfs?service=WFS&' +
+                            'version=1.1.0' +
+                            '&request=GetFeature' +
+                            '&typename=' + layerName +
+                            '&CQL_FILTER=' + cqlFilter +
+                            '&outputFormat=application/json' +
+                            '&maxFeatures=50' +
+                            '&srsname=EPSG:3857&,EPSG:3857';
 
-                    // Retrieve feature vector and add to layer above raster
-                    vectorSource = new ol.source.Vector({
-                        format: new ol.format.GeoJSON(),
-                        loader: function(extent, resolution, projection) {
-                            var proj = projection.getCode();
-                            var url = featureUrl
-                            var xhr = new XMLHttpRequest();
-                            xhr.open('GET', url);
-                            var onError = function() {
-                                vectorSource.removeLoadedExtent(extent);
-                            }
-                            xhr.onerror = onError;
-                            xhr.onload = function() {
-                                if (xhr.status == 200) {
-                                    vectorSource.addFeatures(
-                                    vectorSource.getFormat().readFeatures(xhr.responseText));
-                                } else {
-                                    onError();
+                        // Retrieve feature vector and add to layer above raster
+                        vectorSource = new ol.source.Vector({
+                            format: new ol.format.GeoJSON(),
+                            loader: function(extent, resolution, projection) {
+                                var proj = projection.getCode();
+                                var url = featureUrl
+                                var xhr = new XMLHttpRequest();
+                                xhr.open('GET', url);
+                                var onError = function() {
+                                    vectorSource.removeLoadedExtent(extent);
                                 }
-                            }
-                            xhr.send();
-                        },
-                        strategy: ol.loadingstrategy.bbox,
-                    })
-                    vectorLayer.setSource(vectorSource);
-                    vectorLayer.setStyle(featureSelectedStyle);
-
-                    // Zoom to loaded feature
-                    // vectorSource.once('change', (event) => {
-                    //     map.getView().fit(vectorLayer.getSource().getExtent(), (map.getSize()));
-                    // })
-
-                    // Zoom in to a reasonable level, but do not zoom out if the user has already zoomed in manually.
-                    if (typeSelect.value === 'Navigate' && selectLayer !== 'county') {
-                        view.animate({
-                            center: evt.coordinate,
-                            duration: 1000,
-                            zoom: map.getView().getZoom() > 7 ? map.getView().getZoom() : 10
+                                xhr.onerror = onError;
+                                xhr.onload = function() {
+                                    if (xhr.status == 200) {
+                                        vectorSource.addFeatures(
+                                        vectorSource.getFormat().readFeatures(xhr.responseText));
+                                    } else {
+                                        onError();
+                                    }
+                                }
+                                xhr.send();
+                            },
+                            strategy: ol.loadingstrategy.bbox,
                         })
+                        vectorLayer.setSource(vectorSource);
+                        vectorLayer.setStyle(featureSelectedStyle);
+
+                        // Zoom to loaded feature
+                        // vectorSource.once('change', (event) => {
+                        //     map.getView().fit(vectorLayer.getSource().getExtent(), (map.getSize()));
+                        // })
+
+                        // Zoom in to a reasonable level, but do not zoom out if the user has already zoomed in manually.
+                        if (typeSelect.value === 'Navigate' && selectLayer !== 'county') {
+                            view.animate({
+                                center: evt.coordinate,
+                                duration: 1000,
+                                zoom: map.getView().getZoom() > 7 ? map.getView().getZoom() : 10
+                            })
+                        }
                     }
-                }
-            });
+                });
+        }
     }
 
 });
@@ -502,7 +519,6 @@ function listFeatures() {
 
 // Populate info window
 function populateInfoWindow(layer, data) {
-    console.log(data);
     document.getElementById('infowindow').style.display = 'unset';
     let html = '';
     if (layer === 'protectedArea') {
