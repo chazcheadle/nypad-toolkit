@@ -116,7 +116,7 @@ html, body {
     left: 650px; */
 }
 
-#popup {
+#infowindow {
     right: 10px;
     top: 10px;
     background-color: #ffffff;
@@ -130,28 +130,28 @@ html, body {
     z-index: 1000;
     display: none;
 }
-.popup-closer {
+.infowindow-closer {
     text-decoration: none;
     position: absolute;
     top: 2px;
     right: 8px;
     }
-    .popup-closer:after {
+    .infowindow-closer:after {
     content: "✖";
 }
 
-#popup-header {
+#infowindow-header {
     padding: 10px;
     color: white;
     background-color: green;
     font-weight: bold;
 }
 
-#popup-content {
+#infowindow-content {
     /* padding: 0px 10px; */
 }
 
-#popup-content .attr-table {
+#infowindow-content .attr-table {
     border-right: 1px solid lightgray;
     border-bottom: 1px solid lightgray;
     border-left: 1px solid lightgray;
@@ -159,12 +159,12 @@ html, body {
     font-size: 0.8em;
 }
 
-#popup-content .attr-table div {
+#infowindow-content .attr-table div {
     border-top: 1px solid lightgray;
     padding: 3px 6px;
 }
 
-#popup-content .gap-status-head {
+#infowindow-content .gap-status-head {
     background: #4ebd57;
     color: white;
     font-weight: bold;

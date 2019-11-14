@@ -90,28 +90,6 @@ var userEditsLayer = new ol.layer.Vector({
     geometryName: 'geometry'
 });
 
-
-// var modify = new ol.interaction.Modify({ source: userEditsSource });
-// map.addInteraction(modify);
-
-// userEditsSource.on('addfeature', function(event) {
-//     console.log(event.feature);
-//     var writer = new ol.format.GeoJSON();
-//     var geojsonStr = writer.writeFeatures(userEditsSource.getFeatures());
-//     console.log(JSON.parse(geojsonStr));
-//     console.log('Attempt insert');
-//     transactWFS('insert', event.feature);
-// });
-
-
-var saveButton = document.getElementById('save-edits');
-saveButton.onclick = function() {
-        console.log(userEditsSource.getFeatures());
-        var writer = new ol.format.GeoJSON();
-        var geojsonStr = writer.writeFeatures(userEditsSource.getFeatures());
-        console.log(geojsonStr);
-}
-
 var draw, snap; // global so we can remove them later
 
 /**
@@ -145,41 +123,45 @@ function addInteractions() {
             geometryName: 'geometry'
         });
         map.addInteraction(draw);
+
+        // Save drawn features to the database.
+        draw.on('drawend', function(event) {
+            // Convert OL feature object into WKT format.
+            var format = new ol.format.WKT();
+            const geometry = format.writeGeometry(event.feature.getGeometry());
+            // TODO: Get feature details from user.
+
+            let name = 'TEST';
+            let description = 'Description';
+            console.log(geometry);
+            $.ajax({
+                method: 'POST',
+                url: '/transaction',
+                contentType: 'application/x-www-form-urlencoded',
+                data: {
+                    action: 'insert',
+                    name: `${name}`,
+                    description: `${description}`,
+                    feature: geometry,
+                }
+            })
+            .error((e) => {
+                console.log('EEEEEEEEEE');
+                console.log(e);
+            })
+            .done(function() {
+                // Refresh the source. to show the DB served data.
+                userEditsSource.clear();
+            });
+        });
+
+
         snap = new ol.interaction.Snap({ source: userEditsSource });
         map.addInteraction(snap);
     }
 }
 addInteractions();
 
-// Save drawn features to the database.
-draw.on('drawend', function(event) {
-    // Convert OL feature object into WKT format.
-    var format = new ol.format.WKT();
-    const geometry = format.writeGeometry(event.feature.getGeometry());
-    // TODO: Get feature details from user.
-    let name = 'TEST';
-    let description = 'Description';
-    console.log(geometry);
-    $.ajax({
-        method: 'POST',
-        url: 'http://molamola.us:1234/transaction',
-        contentType: 'application/x-www-form-urlencoded',
-        data: {
-            action: 'insert',
-            name: `${name}`,
-            description: `${description}`,
-            feature: geometry,
-        }
-    })
-    .error((e) => {
-        console.log('EEEEEEEEEE');
-        console.log(e);
-    })
-    .done(function() {
-        // Refresh the source. to show the DB served data.
-        userEditsSource.clear();
-    });
-});
 
 
 
@@ -292,26 +274,16 @@ countyVectorLayer.setSource(countyVectorSource);
 // map.addInteraction(hoverInteraction);
 
 function changeSelectionLayer(layer) {
-    // console.log(layer);
+    selectionLayerChoice = layer;
     // Clear selected feature overlay.
     vectorLayer.setSource();
     // Close info box.
     closer.click();
-    selectionLayerChoice = layer;
-    if (layer === 'county') {
-        // map.addInteraction(hoverInteraction);
-    }
-    else {
-        // map.removeInteraction(hoverInteraction);
-    }
-
-    // for (let i = 0; i < selectionLayerChoice.length; i++) { 
-    //     if (selectionLayerChoice[i].checked) {
-    //         const selectLayer = selectionLayerChoice[i].value;
-    //         console.log(selectLayer);
-    //     }
-    // }
-
+    // Remove drawing interactions.
+    map.removeInteraction(draw);
+    map.removeInteraction(snap);
+    // Switch back to Navigate mode.
+    typeSelect.value = 'Navigate';
 }
 
 var townsLayer = new ol.layer.Image({
@@ -425,7 +397,7 @@ map.on('singleclick', function (evt) {
                     if (selectLayer === 'protectedArea') {
                         cqlFilter = 'nypad_id = \'' + feature.features[0].properties.nypad_id + '\'';
                         layerName = 'nypad:nypad_2017';
-                        populatePopup(selectLayer, feature);
+                        populateInfoWindow(selectLayer, feature);
                     }
                     else {
                         cqlFilter = 'abbreviation = \'' + feature.features[0].properties.abbreviation + '\'';
@@ -435,7 +407,7 @@ map.on('singleclick', function (evt) {
                                 return response.text();
                             })
                             .then((data) => {
-                                populatePopup(selectLayer, JSON.parse(data));
+                                populateInfoWindow(selectLayer, JSON.parse(data));
                             });
                     }
 
@@ -480,7 +452,7 @@ map.on('singleclick', function (evt) {
                     // vectorSource.once('change', (event) => {
                     //     map.getView().fit(vectorLayer.getSource().getExtent(), (map.getSize()));
                     // })
-                    
+
                     // Zoom in to a reasonable level, but do not zoom out if the user has already zoomed in manually.
                     if (typeSelect.value === 'Navigate' && selectLayer !== 'county') {
                         view.animate({
@@ -505,9 +477,9 @@ function listFeatures() {
 }
 
 // Populate info window
-function populatePopup(layer, data) {
+function populateInfoWindow(layer, data) {
     console.log(data);
-    document.getElementById('popup').style.display = 'unset';
+    document.getElementById('infowindow').style.display = 'unset';
     let html = '';
     if (layer === 'protectedArea') {
         const {
@@ -518,7 +490,7 @@ function populatePopup(layer, data) {
             nypad_id,
             gis_acres
         } = data.features[0].properties;
-        document.getElementById('popup-title').innerHTML = `${loc_nm}`;
+        document.getElementById('infowindow-title').innerHTML = `${loc_nm}`;
         html = `<div class='attr-table'><div>Owner: ${loc_own}</div>
         <div>Agency: ${loc_mang}</div>
         <div>GAP Status: ${gap_sts}</div>
@@ -528,7 +500,7 @@ function populatePopup(layer, data) {
     else {
         const { total, gap_status } = data;
         const percent = 100 * (total.pa_acres / total.county_acres);
-        document.getElementById('popup-title').innerHTML = `${total.name} County`;
+        document.getElementById('infowindow-title').innerHTML = `${total.name} County`;
         html = `<div class='attr-table'>
             <div># Protected areas: ${total.pa_count}</div>
             <div>Protected acreage: ${formatNumber(total.pa_acres)}</div>
@@ -544,7 +516,7 @@ function populatePopup(layer, data) {
         });
         html += '</div>';
     }
-    document.getElementById('popup-content').innerHTML = html;
+    document.getElementById('infowindow-content').innerHTML = html;
 }
 
 // Area search function
@@ -611,9 +583,9 @@ function searchByCQLFilter() {
 }
 // DWITHIN(wkb_geometry, collectGeometries(queryCollection('nypad:nypad_2017','wkb_geometry','nypad_id = ''NYPAD-40507''')), 5000, meters)
 // Close info window
-var closer = document.getElementById('popup-closer');
+var closer = document.getElementById('infowindow-closer');
 closer.onclick = function() {
-    document.getElementById('popup').style.display = 'none';
+    document.getElementById('infowindow').style.display = 'none';
 }
 
 
@@ -638,6 +610,8 @@ $(document).ready(function() {
     });
 
 });
+
+// Create infowindow container
 
 
 

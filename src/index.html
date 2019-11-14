@@ -103,7 +103,7 @@
                             <option value="LineString">Draw line</option>
                             <option value="Polygon">Draw polygon</option>
                         </select>
-                        <input type="button" id="save-edits" value="Save Edits" />
+                        <!-- <input type="button" id="save-edits" value="Save Edits" /> -->
                         <input type="button" value="List Features" onclick="listFeatures();" />
                     </div>
                 </form>
@@ -127,12 +127,12 @@
                 <div id="map" class="map">
                     <div id="scale-line" class="scale-line"></div>
                     <div id="map"></div>
-                    <div id="popup">
-                        <div id="popup-header">
-                            <a href="#" id="popup-closer" class="popup-closer"></a>
-                            <div id="popup-title">NYPAD Data</div>
+                    <div id="infowindow">
+                        <div id="infowindow-header">
+                            <a href="#" id="infowindow-closer" class="infowindow-closer"></a>
+                            <div id="infowindow-title">NYPAD Data</div>
                         </div>
-                        <div id="popup-content"></div>
+                        <div id="infowindow-content"></div>
                     </div>
                 </div>
             </div>
