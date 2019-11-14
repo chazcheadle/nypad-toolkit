@@ -17,12 +17,14 @@ const st = db.postgis;
 const insertFeature = (data) => {
 
     const {
-        feature = '',
+        description,
+        feature,
         name,
     } = data;
     return db('user_edits')
         .insert({
             name,
+            description,
             geometry: st.setSRID(st.geomFromText(feature), 26918)
         })
         .then((result) => {

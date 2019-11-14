@@ -11,6 +11,17 @@ var bingStyles = [
 ];
 
 var selectionLayerChoice = 'protectedArea';
+var container = document.getElementById('popup');
+var content = document.getElementById('popup-content');
+var popupCloser = document.getElementById('popup-closer');
+
+var overlay = new ol.Overlay({
+    element: container,
+    autoPan: true,
+    autoPanAnimation: {
+      duration: 250
+    }
+});
 
 var map = new ol.Map({
     controls: [
@@ -46,6 +57,7 @@ var map = new ol.Map({
             ],
         })
     ],
+    overlays: [overlay],
     view: new ol.View({
         center: [-8420005, 5286797],
         zoom: 7
@@ -129,30 +141,22 @@ function addInteractions() {
             // Convert OL feature object into WKT format.
             var format = new ol.format.WKT();
             const geometry = format.writeGeometry(event.feature.getGeometry());
-            // TODO: Get feature details from user.
 
-            let name = 'TEST';
-            let description = 'Description';
-            console.log(geometry);
-            $.ajax({
-                method: 'POST',
-                url: '/transaction',
-                contentType: 'application/x-www-form-urlencoded',
-                data: {
-                    action: 'insert',
-                    name: `${name}`,
-                    description: `${description}`,
-                    feature: geometry,
-                }
-            })
-            .error((e) => {
-                console.log('EEEEEEEEEE');
-                console.log(e);
-            })
-            .done(function() {
-                // Refresh the source. to show the DB served data.
-                userEditsSource.clear();
-            });
+            content.innerHTML = `
+            <input type='text' size='40' id='user-edit-name' placeholder='Enter a name for this feature'></input>
+            <textarea cols='40' rows='4' id='user-edit-description' placeholder='Enter a description'></textarea>
+            <input type="hidden" id='user-edit-geometry' value="${geometry}">
+            <div>
+                <input type='button' onclick='saveUserEdit();' value='Save'>
+                <input type='button' onclick='popupCloser.click()' value='Cancel'>
+            </div>`;
+            if (!overlay.getPosition()) {
+                overlay.setPosition(event.feature.getGeometry().getLastCoordinate());
+            }
+
+            // saveUserEdit({name, description, geometry});
+
+
         });
 
 
@@ -163,7 +167,36 @@ function addInteractions() {
 addInteractions();
 
 
+const saveUserEdit = () => {
 
+    const name = document.getElementById('user-edit-name').value;
+    const description = document.getElementById('user-edit-description').value;
+    const geometry = document.getElementById('user-edit-geometry').value;
+
+    if (name) {
+
+        $.ajax({
+            method: 'POST',
+            url: '/transaction',
+            contentType: 'application/x-www-form-urlencoded',
+            data: {
+                action: 'insert',
+                name: `${name}`,
+                description: `${description}`,
+                feature: geometry,
+            }
+        })
+        .error((e) => {
+            console.log('EEEEEEEEEE');
+            console.log(e);
+        })
+        .done(function() {
+            // Refresh the source. to show the DB served data.
+            userEditsSource.clear();
+        });
+        popupCloser.click();
+    }
+}
 
 
 // Load Counties Shoreline layer (WMS)
@@ -264,14 +297,6 @@ var countyVectorLayer = new ol.layer.Vector({
 })
 
 countyVectorLayer.setSource(countyVectorSource);
-
-
-// let hoverInteraction = new ol.interaction.Select({
-//     condition: ol.events.condition.pointerMove,
-//     layers: [countyVectorLayer]   //Setting layers to be hovered
-// });
-
-// map.addInteraction(hoverInteraction);
 
 function changeSelectionLayer(layer) {
     selectionLayerChoice = layer;
@@ -465,7 +490,6 @@ map.on('singleclick', function (evt) {
             });
     }
 
-
 });
 
 // List features on user drawing layer
@@ -518,6 +542,16 @@ function populateInfoWindow(layer, data) {
     }
     document.getElementById('infowindow-content').innerHTML = html;
 }
+
+// Feature Popup
+
+
+popupCloser.onclick = function() {
+    overlay.setPosition(undefined);
+    closer.blur();
+    return false;
+};
+
 
 // Area search function
 function searchByArea(reset) {
